@@ -16,14 +16,10 @@ import os
 import shlex
 import subprocess
 import sys
-import time
-import uuid
 from pathlib import Path
-from urllib.parse import unquote
 
 import encryption_helper
 import phantom.app as phantom
-import phantom.rules as ph_rules
 import requests
 import sh
 import simplejson as json
@@ -653,7 +649,7 @@ class SlackConnector(phantom.BaseConnector):
             ret_val = self._start_bot(param)
         elif action_id == ACTION_ID_ON_POLL:
             ret_val = self._on_poll(param)
-        
+
         return ret_val
 
 
