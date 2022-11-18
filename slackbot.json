@@ -1,27 +1,27 @@
 {
-    "appid": "3ac26c7f-baa4-4583-86ff-5aac82778a86",
-    "name": "Slack",
-    "description": "Integrate with Slack to post messages and attachments to channels",
+    "appid": "2591bdbc-21e1-4aa1-bf64-e2aa5c733a4a",
+    "name": "SlackBot",
+    "description": "Integrate with SlackBot to post messages and attachments to channels",
     "publisher": "Splunk",
-    "package_name": "phantom_slack",
+    "package_name": "phantom_slackbot",
     "type": "information",
-    "license": "Copyright (c) 2016-2022 Splunk Inc.",
+    "license": "Copyright (c) 2022 Splunk Inc.",
     "main_module": "slackbot_connector.py",
-    "app_version": "3.1.0",
+    "app_version": "1.0.0",
     "utctime_updated": "2022-02-04T18:14:51.000000Z",
     "product_vendor": "Slack Technologies",
     "product_name": "Slack",
     "product_version_regex": ".*",
-    "min_phantom_version": "5.2.0",
+    "min_phantom_version": "5.3.0",
     "python_version": "3",
     "fips_compliant": true,
     "latest_tested_versions": [
-        "Cloud API, July 05, 2022"
+        "Cloud API, November 18, 2022"
     ],
     "logo": "logo_slack.svg",
     "logo_dark": "logo_slack_dark.svg",
     "require_auth_token": false,
-    "rest_handler": "slack_connector.handle_request",
+    "rest_handler": "slackbot_connector.handle_request",
     "configuration": {
         "bot_token": {
             "data_type": "password",
