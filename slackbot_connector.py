@@ -536,7 +536,7 @@ class SlackConnector(phantom.BaseConnector):
         self._state['bot_name'] = bot_username
         self._state['bot_id'] = bot_user_id
 
-        self.save_progress(SLACK_SUCC_TEST_CONN_PASSED)
+        self.save_progress(SLACK_SUCCESS_TEST_CONN_PASSED)
 
         return action_result.set_status(phantom.APP_SUCCESS)
 
@@ -553,7 +553,7 @@ class SlackConnector(phantom.BaseConnector):
                 if 'slack_bot.py' in sh.ps('ww', pid):  # pylint: disable=E1101
                     try:
                         sh.kill(pid)  # pylint: disable=E1101
-                        return action_result.set_status(phantom.APP_SUCCESS, SLACK_SUCC_SLACKBOT_STOPPED)
+                        return action_result.set_status(phantom.APP_SUCCESS, SLACK_SUCCESS_SLACKBOT_STOPPED)
                     except Exception:
                         return action_result.set_status(phantom.APP_ERROR, SLACK_ERROR_COUDNT_STOP_SLACKBOT)
             except Exception:
@@ -564,7 +564,7 @@ class SlackConnector(phantom.BaseConnector):
                 pid = shlex.split(str(ps_out))[1]
                 try:
                     sh.kill(pid)  # pylint: disable=E1101
-                    return action_result.set_status(phantom.APP_SUCCESS, SLACK_SUCC_SLACKBOT_STOPPED)
+                    return action_result.set_status(phantom.APP_SUCCESS, SLACK_SUCCESS_SLACKBOT_STOPPED)
                 except Exception:
                     return action_result.set_status(phantom.APP_ERROR, SLACK_ERROR_COUDNT_STOP_SLACKBOT)
             except Exception:
@@ -587,7 +587,7 @@ class SlackConnector(phantom.BaseConnector):
             try:
                 if 'slack_bot.py' in sh.ps('ww', pid):  # pylint: disable=E1101
                     self.save_progress("Detected SlackBot running with pid {0}".format(pid))
-                    return action_result.set_status(phantom.APP_SUCCESS, SLACK_SUCC_SLACKBOT_RUNNING)
+                    return action_result.set_status(phantom.APP_SUCCESS, SLACK_SUCCESS_SLACKBOT_RUNNING)
             except Exception:
                 pass
 
@@ -625,7 +625,7 @@ class SlackConnector(phantom.BaseConnector):
         self._state['pid'] = proc.pid
         self.save_progress("Started SlackBot with pid: {0}".format(proc.pid))
 
-        return action_result.set_status(phantom.APP_SUCCESS, SLACK_SUCC_SLACKBOT_STARTED)
+        return action_result.set_status(phantom.APP_SUCCESS, SLACK_SUCCESS_SLACKBOT_STARTED)
 
     def _on_poll(self, param):
 
