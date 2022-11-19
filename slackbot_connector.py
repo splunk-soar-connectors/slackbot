@@ -521,7 +521,7 @@ class SlackConnector(phantom.BaseConnector):
         ret_val, resp_json = self._make_slack_rest_call(action_result, SLACK_AUTH_TEST, {})
 
         if not ret_val:
-            self.save_progress(SLACK_ERROR_TEST_CONN_FAILED)
+            self.save_progress(SLACK_ERROR_TEST_CONNECTION_FAILED)
             return ret_val
 
         action_result.add_data(resp_json)
@@ -536,7 +536,7 @@ class SlackConnector(phantom.BaseConnector):
         self._state['bot_name'] = bot_username
         self._state['bot_id'] = bot_user_id
 
-        self.save_progress(SLACK_SUCCESS_TEST_CONN_PASSED)
+        self.save_progress(SLACK_SUCCESS_TEST_CONNECTION_PASSED)
 
         return action_result.set_status(phantom.APP_SUCCESS)
 
