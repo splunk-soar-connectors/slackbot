@@ -1165,21 +1165,21 @@ if __name__ == '__main__':  # noqa: C901
             if bot_token:
                 bot_token = decrypt_state(asset_id, bot_token, "bot")
         except Exception:
-            print(SLACK_DECRYPTION_ERR)
+            print(SLACK_DECRYPTION_ERROR)
             sys.exit(1)
 
         try:
             if socket_token:
                 socket_token = decrypt_state(asset_id, socket_token, "socket")
         except Exception:
-            print(SLACK_DECRYPTION_ERR)
+            print(SLACK_DECRYPTION_ERROR)
             sys.exit(1)
 
         try:
             if ph_auth_token:
                 ph_auth_token = decrypt_state(asset_id, ph_auth_token, "ph_auth")
         except Exception:
-            print(SLACK_DECRYPTION_ERR)
+            print(SLACK_DECRYPTION_ERROR)
             sys.exit(1)
 
         sb = SlackBot(

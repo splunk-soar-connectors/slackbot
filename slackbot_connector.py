@@ -173,7 +173,7 @@ def handle_request(request, path):
             try:
                 my_token = encryption_helper.decrypt(my_token, asset_id)
             except Exception:
-                return RetVal(phantom.APP_ERROR, SLACK_DECRYPTION_ERR)
+                return RetVal(phantom.APP_ERROR, SLACK_DECRYPTION_ERROR)
 
         their_token = payload.get('token')
         # rest_log(f"My token: {my_token}, Their token: {their_token}")
@@ -282,8 +282,8 @@ class SlackConnector(phantom.BaseConnector):
                 if self._verification_token:
                     self._verification_token = self.decrypt_state(self._verification_token, "verification")
             except Exception as e:
-                self.debug_print("{}: {}".format(SLACK_DECRYPTION_ERR, self._get_error_message_from_exception(e)))
-                return self.set_status(phantom.APP_ERROR, SLACK_DECRYPTION_ERR)
+                self.debug_print("{}: {}".format(SLACK_DECRYPTION_ERROR, self._get_error_message_from_exception(e)))
+                return self.set_status(phantom.APP_ERROR, SLACK_DECRYPTION_ERROR)
 
         return phantom.APP_SUCCESS
 
@@ -304,8 +304,8 @@ class SlackConnector(phantom.BaseConnector):
                 self._state[SLACK_JSON_PH_AUTH_TOKEN] = self.encrypt_state(self._ph_auth_token, "ph_auth")
 
         except Exception as e:
-            self.debug_print("{}: {}".format(SLACK_ENCRYPTION_ERR, self._get_error_message_from_exception(e)))
-            return self.set_status(phantom.APP_ERROR, SLACK_ENCRYPTION_ERR)
+            self.debug_print("{}: {}".format(SLACK_ENCRYPTION_ERROR, self._get_error_message_from_exception(e)))
+            return self.set_status(phantom.APP_ERROR, SLACK_ENCRYPTION_ERROR)
 
         self._state[SLACK_STATE_IS_ENCRYPTED] = True
         self.save_state(self._state)
@@ -618,7 +618,7 @@ class SlackConnector(phantom.BaseConnector):
 
         if not resp.get('ok'):
             self.save_progress("Failed to start Slack Bot")
-            return action_result.set_status(phantom.APP_ERROR, SLACK_SOCKET_TOKEN_ERR)
+            return action_result.set_status(phantom.APP_ERROR, SLACK_SOCKET_TOKEN_ERROR)
 
         self.save_progress("Starting SlackBot")
         proc = subprocess.Popen(['phenv', 'python3', slack_bot_filename, asset_id, app_version])
