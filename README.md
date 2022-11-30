@@ -1,16 +1,16 @@
 Publisher: Splunk
 Connector Version: 2\.4\.0
 Product Vendor: Slack Technologies
-Product Name: SlackBot
+Product Name: Slackbot
 Product Version Supported (regex): "\.\*"
 Minimum Product Version: 5\.2\.0
 
-Integrate with SlackBot to post messages and attachments to channels
+Integrate with Slackbot to post messages and attachments to channels
 
 ## Authentication
 
-SOAR's SlackBot App needs a bot token to read messages from and post messages to slack channels. The
-app also needs a verification token to verify POST requests received from SlackBot.
+SOAR's Slackbot App needs a bot token to read messages from and post messages to slack channels. The
+app also needs a verification token to verify POST requests received from Slackbot.
 
 ### Create a Slack App
 
@@ -288,7 +288,7 @@ Once on this page, toggle on **Interactivity** .
 
 ### Ingest Settings
 
-To run the SOAR SlackBot that will get SOAR to take commands from Slack, ingestion needs to be
+To run the SOAR Slackbot that will get SOAR to take commands from Slack, ingestion needs to be
 enabled on the SOAR Slack Asset. To do this go back to the INGEST SETTINGS tab and enable polling
 and specify the Polling interval as **off** . The "Label to apply to objects from this source"
 setting is ignored by this app, so it can be set to anything.
@@ -301,22 +301,22 @@ artifacts" settings can be ignored in this case.
 
 [![](img/slack_poll_now.png)](img/slack_poll_now.png)
 
-The POLL NOW window will display the PID of the SlackBot process as well as the number of artifacts
+The POLL NOW window will display the PID of the Slackbot process as well as the number of artifacts
 and containers ingested (which will always be zero for this app).
 
 
-### Stopping SlackBot
+### Stopping Slackbot
 
-Once the SOAR SlackBot starts running, the **stop bot** action needs to be run to stop it. Simply
-disabling ingestion won't stop SlackBot.
-WARNING: Stopping SlackBot is required before upgrading or uninstalling the SOAR Slack App or else
-an untracked SlackBot process may be left running on the SOAR instance. In addition, deleting a
-Slack asset that has SlackBot running will result in SlackBot continuing to run, untracked.
+Once the SOAR Slackbot starts running, the **stop bot** action needs to be run to stop it. Simply
+disabling ingestion won't stop Slackbot.
+WARNING: Stopping Slackbot is required before upgrading or uninstalling the SOAR Slack App or else
+an untracked Slackbot process may be left running on the SOAR instance. In addition, deleting a
+Slack asset that has Slackbot running will result in Slackbot continuing to run, untracked.
 
 
 ## Slack Commands
 
-Once a Slack asset has been configured, and SlackBot is running on SOAR, it needs to be invited to
+Once a Slack asset has been configured, and Slackbot is running on SOAR, it needs to be invited to
 the channel, and then commands from Slack can be received by SOAR. In Slack, just mention the bot to
 get a help message on running commands. All commands follow this syntax:
 
@@ -359,9 +359,9 @@ To run an action on SOAR from Slack, use the **act** command. The syntax of whic
         @SOARbot act "whois ip" --container 123 --parameters ip:1.1.1.1 --name "All WhoIs"
 
 
-After receiving an **act** command, SlackBot will kick off the action and send a link to the action
-page to Slack. When the action is complete, SlackBot will send a summary of the action results to
-Slack. If multiple actions are run at once, SlackBot will send action results for each action
+After receiving an **act** command, Slackbot will kick off the action and send a link to the action
+page to Slack. When the action is complete, Slackbot will send a summary of the action results to
+Slack. If multiple actions are run at once, Slackbot will send action results for each action
 separately as each action completes.
 
 ### Running Playbooks
@@ -389,8 +389,8 @@ To run a playbook on SOAR from Slack, use the **run_playbook** command. The synt
         @SOARbot run_playbook 32 123
 
 
-After receiving a **run_playbook** command, SlackBot will kick off the playbook and send a link to
-the container's mission control page to slack. When the playbook has finished running, SlackBot will
+After receiving a **run_playbook** command, Slackbot will kick off the playbook and send a link to
+the container's mission control page to slack. When the playbook has finished running, Slackbot will
 send a status report of the playbook's run to Slack.
 
 ### Getting Container Information
@@ -420,7 +420,7 @@ To get information about a container, use the **get_container** command. The syn
 
         @SOARbot get_container --tags tag1 tag2 tag3
 
-Running a **get_container** command will result in SlackBot sending either a list of containers or a
+Running a **get_container** command will result in Slackbot sending either a list of containers or a
 set of information on one container to Slack.
 
 ### Listing Actions or Containers
@@ -444,7 +444,7 @@ To get a list of actions or containers, use the **list** command. The syntax of 
 
         @SOARbot list containers
 
-Running a **list** command will result in SlackBot sending a list of either actions or containers to
+Running a **list** command will result in Slackbot sending a list of either actions or containers to
 Slack.
 
 
@@ -473,8 +473,8 @@ VARIABLE | REQUIRED | TYPE | DESCRIPTION
 [upload file](#action-upload-file) - Upload file to Slack
 [ask question](#action-ask-question) - Ask a question to a Slack user
 [get response](#action-get-response) - Get the response to a previously asked question
-[on poll](#action-on-poll) - Start SlackBot and make health checks to it
-[stop bot](#action-stop-bot) - Stop SlackBot
+[on poll](#action-on-poll) - Start Slackbot and make health checks to it
+[stop bot](#action-stop-bot) - Stop Slackbot
 
 ## action: 'test connectivity'
 Tests authorization with Slack
@@ -1178,12 +1178,12 @@ summary\.total\_objects | numeric |
 summary\.total\_objects\_successful | numeric |
 
 ## action: 'on poll'
-Start SlackBot and make health checks to it
+Start Slackbot and make health checks to it
 
 Type: **ingest**
 Read only: **True**
 
-Enabling ingestion causes the on poll action to be called every polling interval \(configured in ingestion settings\)\. The on poll action will check if SlackBot is running; if it is not, the action will start it\. No new containers or artifacts will be created by this action\.
+Enabling ingestion causes the on poll action to be called every polling interval \(configured in ingestion settings\)\. The on poll action will check if Slackbot is running; if it is not, the action will start it\. No new containers or artifacts will be created by this action\.
 
 #### Action Parameters
 PARAMETER | REQUIRED | DESCRIPTION | TYPE | CONTAINS
@@ -1198,12 +1198,12 @@ PARAMETER | REQUIRED | DESCRIPTION | TYPE | CONTAINS
 No Output
 
 ## action: 'stop bot'
-Stop SlackBot
+Stop Slackbot
 
 Type: **correct**
 Read only: **False**
 
-This action will stop SlackBot if it is running\. It will also disable ingestion if it is enabled\.
+This action will stop Slackbot if it is running\. It will also disable ingestion if it is enabled\.
 
 #### Action Parameters
 No parameters are required for this action
