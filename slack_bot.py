@@ -1119,9 +1119,11 @@ class SlackBot(object):
 
         @app.event('message')
         def handle_message_events(body, logger):
-            # Ignore undirected messages. Without this no-op handler definition a warning log will
-            # get printed every time a message comes in.
-            logging.debug(body)
+            """
+            Ignore handling any general messages. Messages with a mention will be handled by the mention handler.
+
+            Without this no-op handler definition a warning log will get printed every time a message comes in.
+            """
             pass
 
         handler = SocketModeHandler(app, self.socket_token)

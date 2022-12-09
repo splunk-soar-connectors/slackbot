@@ -123,31 +123,31 @@ def _is_safe_path(basedir, path, follow_symlinks=True):
 
 
 def rest_log(msg):
-    state_dir = "{0}/{1}".format(APPS_STATE_PATH, SLACK_BOT_APP_ID)
+    state_dir = '{0}/{1}'.format(APPS_STATE_PATH, SLACK_BOT_APP_ID)
     path.unlink()
-    path = Path(state_dir) / "resthandler.log"
+    path = Path(state_dir) / 'resthandler.log'
     path.touch()  # default exists_ok=True
     with path.open('a') as highscore:
-        highscore.write(msg + "\n")
+        highscore.write(msg + '\n')
 
 
 def process_payload(payload, answer_path):
 
     if not exists(answer_path):
         final_payload = {
-            "payloads": [payload],
-            "replies_from": [payload.get('user').get('id')]
+            'payloads': [payload],
+            'replies_from': [payload.get('user').get('id')]
         }
         return final_payload
     else:
         old_payload = dict()
         try:
-            with open(answer_path, "r") as read_old_file:
+            with open(answer_path, 'r') as read_old_file:
                 old_payload = json.loads(read_old_file.read())
         except Exception as e:
             return HttpResponse(
-                "Error while reading data from file: {}".format(e),
-                content_type="text/plain",
+                'Error while reading data from file: {}'.format(e),
+                content_type='text/plain',
                 status=400
             )
         current_user_id = payload.get('user').get('id')
@@ -168,39 +168,39 @@ def handle_request(request, path):
     try:
         payload = request.POST.get('payload')
         payload = json.loads(payload)
-        state_dir = "{0}/{1}".format(APPS_STATE_PATH, SLACK_BOT_APP_ID)
+        state_dir = '{0}/{1}'.format(APPS_STATE_PATH, SLACK_BOT_APP_ID)
 
         if not payload:
-            return HttpResponse(SLACK_BOT_ERROR_PAYLOAD_NOT_FOUND, content_type="text/plain", status=400)
+            return HttpResponse(SLACK_BOT_ERROR_PAYLOAD_NOT_FOUND, content_type='text/plain', status=400)
 
         callback_id = payload.get('callback_id')
-        # rest_log(f"Callback_id: {callback_id}")
+        # rest_log(f'Callback_id: {callback_id}')
         if not callback_id:
-            return HttpResponse(SLACK_BOT_ERROR_CALLBACK_ID_NOT_FOUND, content_type="text/plain", status=400)
+            return HttpResponse(SLACK_BOT_ERROR_CALLBACK_ID_NOT_FOUND, content_type='text/plain', status=400)
 
         try:
             callback_json = json.loads(UnicodeDammit(callback_id).unicode_markup)
         except Exception as e:
-            # rest_log(f"Callback parse error")
-            return HttpResponse(SLACK_BOT_ERROR_PARSE_JSON_FROM_CALLBACK_ID.format(error=e), content_type="text/plain", status=400)
+            # rest_log(f'Callback parse error')
+            return HttpResponse(SLACK_BOT_ERROR_PARSE_JSON_FROM_CALLBACK_ID.format(error=e), content_type='text/plain', status=400)
 
         asset_id = callback_json.get('asset_id')
-        # rest_log(f"Asset retrieved: {asset_id}")
+        # rest_log(f'Asset retrieved: {asset_id}')
         try:
             int(asset_id)
         except ValueError:
-            return HttpResponse(SLACK_BOT_ERROR_STATE_FILE_NOT_FOUND, content_type="text/plain", status=400)
+            return HttpResponse(SLACK_BOT_ERROR_STATE_FILE_NOT_FOUND, content_type='text/plain', status=400)
 
-        state_filename = "{0}_state.json".format(asset_id)
-        state_dir = "{0}/{1}".format(APPS_STATE_PATH, SLACK_BOT_APP_ID)
-        state_path = "{0}/{1}".format(state_dir, state_filename)
+        state_filename = '{0}_state.json'.format(asset_id)
+        state_dir = '{0}/{1}'.format(APPS_STATE_PATH, SLACK_BOT_APP_ID)
+        state_path = '{0}/{1}'.format(state_dir, state_filename)
 
         try:
             with open(state_path, 'r') as state_file_obj:  # nosemgrep
                 state_file_data = state_file_obj.read()
                 state = json.loads(state_file_data)
         except Exception as e:
-            return HttpResponse(SLACK_BOT_ERROR_UNABLE_TO_READ_STATE_FILE.format(error=e), content_type="text/plain", status=400)
+            return HttpResponse(SLACK_BOT_ERROR_UNABLE_TO_READ_STATE_FILE.format(error=e), content_type='text/plain', status=400)
 
         my_token = state.get('token')
         if my_token:
@@ -210,21 +210,21 @@ def handle_request(request, path):
                 return RetVal(phantom.APP_ERROR, SLACK_BOT_DECRYPTION_ERROR)
 
         their_token = payload.get('token')
-        # rest_log(f"My token: {my_token}, Their token: {their_token}")
+        # rest_log(f'My token: {my_token}, Their token: {their_token}')
 
         if not my_token or not their_token or my_token != their_token:
-            return HttpResponse(SLACK_BOT_ERROR_AUTH_FAILED, content_type="text/plain", status=400)
+            return HttpResponse(SLACK_BOT_ERROR_AUTH_FAILED, content_type='text/plain', status=400)
 
         qid = callback_json.get('qid')
-        # rest_log(f"Question ID: {qid}")
+        # rest_log(f'Question ID: {qid}')
 
         if not qid:
-            return HttpResponse(SLACK_BOT_ERROR_ANSWER_FILE_NOT_FOUND, content_type="text/plain", status=400)
+            return HttpResponse(SLACK_BOT_ERROR_ANSWER_FILE_NOT_FOUND, content_type='text/plain', status=400)
 
         answer_filename = '{0}.json'.format(qid)
-        answer_path = "{0}/{1}".format(state_dir, answer_filename)
+        answer_path = '{0}/{1}'.format(state_dir, answer_filename)
         if not _is_safe_path(state_dir, answer_path):
-            return HttpResponse(SLACK_BOT_ERROR_INVALID_FILE_PATH, content_type="text/plain", status=400)
+            return HttpResponse(SLACK_BOT_ERROR_INVALID_FILE_PATH, content_type='text/plain', status=400)
 
         final_payload = process_payload(payload, answer_path)
 
@@ -232,13 +232,13 @@ def handle_request(request, path):
             with open(answer_path, 'w') as answer_file:  # nosemgrep
                 answer_file.write(json.dumps(final_payload))
         except Exception as e:
-            return HttpResponse(SLACK_BOT_ERROR_WHILE_WRITING_ANSWER_FILE.format(error=e), content_type="text/plain", status=400)
+            return HttpResponse(SLACK_BOT_ERROR_WHILE_WRITING_ANSWER_FILE.format(error=e), content_type='text/plain', status=400)
 
-        confirmation = callback_json.get('confirmation', "Received response")
-        return HttpResponse(f"Response: {confirmation}", content_type="text/plain", status=200)
+        confirmation = callback_json.get('confirmation', 'Received response')
+        return HttpResponse(f'Response: {confirmation}', content_type='text/plain', status=200)
 
     except Exception as e:
-        return HttpResponse(SLACK_BOT_ERROR_PROCESS_RESPONSE.format(error=e), content_type="text/plain", status=500)
+        return HttpResponse(SLACK_BOT_ERROR_PROCESS_RESPONSE.format(error=e), content_type='text/plain', status=500)
 
 
 # Define the App Class
@@ -282,8 +282,8 @@ class SlackBotConnector(phantom.BaseConnector):
         self._state = self.load_state()
 
         if not isinstance(self._state, dict):
-            self.debug_print("Resetting the state file with the default format")
-            self._state = {"app_version": self.get_app_json().get("app_version")}
+            self.debug_print('Resetting the state file with the default format')
+            self._state = {'app_version': self.get_app_json().get('app_version')}
 
         self._bot_token = config.get(SLACK_BOT_JSON_BOT_TOKEN)
         self._socket_token = config.get(SLACK_BOT_JSON_SOCKET_TOKEN)
@@ -295,11 +295,11 @@ class SlackBotConnector(phantom.BaseConnector):
         self._permitted_users = config.get(SLACK_BOT_JSON_PERMITTED_USERS, False)
         self._base_url = SLACK_BASE_URL
 
-        self._interval = self._validate_integers(self, config.get("response_poll_interval", 30), SLACK_BOT_RESP_POLL_INTERVAL_KEY)
+        self._interval = self._validate_integers(self, config.get('response_poll_interval', 30), SLACK_BOT_RESP_POLL_INTERVAL_KEY)
         if self._interval is None:
             return self.get_status()
 
-        self._timeout = self._validate_integers(self, config.get("timeout", 30), SLACK_BOT_TIMEOUT_KEY)
+        self._timeout = self._validate_integers(self, config.get('timeout', 30), SLACK_BOT_TIMEOUT_KEY)
         if self._timeout is None:
             return self.get_status()
 
@@ -326,16 +326,16 @@ class SlackBotConnector(phantom.BaseConnector):
         # Encrypting tokens
         try:
             if self._bot_token:
-                self._state[SLACK_BOT_JSON_BOT_TOKEN] = self.encrypt_state(self._bot_token, "bot")
+                self._state[SLACK_BOT_JSON_BOT_TOKEN] = self.encrypt_state(self._bot_token, 'bot')
 
             if self._socket_token:
-                self._state[SLACK_BOT_JSON_SOCKET_TOKEN] = self.encrypt_state(self._socket_token, "socket")
+                self._state[SLACK_BOT_JSON_SOCKET_TOKEN] = self.encrypt_state(self._socket_token, 'socket')
 
             if self._ph_auth_token:
-                self._state[SLACK_BOT_JSON_PH_AUTH_TOKEN] = self.encrypt_state(self._ph_auth_token, "ph_auth")
+                self._state[SLACK_BOT_JSON_PH_AUTH_TOKEN] = self.encrypt_state(self._ph_auth_token, 'ph_auth')
 
         except Exception as e:
-            self.debug_print("{}: {}".format(SLACK_BOT_ENCRYPTION_ERROR, self._get_error_message_from_exception(e)))
+            self.debug_print('{}: {}'.format(SLACK_BOT_ENCRYPTION_ERROR, self._get_error_message_from_exception(e)))
             return self.set_status(phantom.APP_ERROR, SLACK_BOT_ENCRYPTION_ERROR)
 
         self._state[SLACK_BOT_STATE_IS_ENCRYPTED] = True
@@ -373,10 +373,10 @@ class SlackBotConnector(phantom.BaseConnector):
         status_code = response.status_code
 
         try:
-            soup = BeautifulSoup(response.text, "html.parser")
+            soup = BeautifulSoup(response.text, 'html.parser')
 
             # Remove the script, style, footer and navigation part from the HTML message
-            for element in soup(["script", "style", "footer", "nav"]):
+            for element in soup(['script', 'style', 'footer', 'nav']):
                 element.extract()
 
             error_text = soup.text
@@ -386,7 +386,7 @@ class SlackBotConnector(phantom.BaseConnector):
         except Exception:
             error_text = SLACK_BOT_UNABLE_TO_PARSE_ERROR_DETAILS
 
-        message = "Status Code: {0}. Data from server:\n{1}\n".format(status_code, error_text)
+        message = 'Status Code: {0}. Data from server:\n{1}\n'.format(status_code, error_text)
 
         message = message.replace('{', '{{').replace('}', '}}')
 
@@ -454,22 +454,22 @@ class SlackBotConnector(phantom.BaseConnector):
         error_code = None
         error_message = SLACK_BOT_ERROR_MESSAGE_UNAVAILABLE
 
-        self.error_print("Error occurred.", e)
+        self.error_print('Error occurred.', e)
 
         try:
-            if hasattr(e, "args"):
+            if hasattr(e, 'args'):
                 if len(e.args) > 1:
                     error_code = e.args[0]
                     error_message = e.args[1]
                 elif len(e.args) == 1:
                     error_message = e.args[0]
         except Exception as e:
-            self.error_print("Error occurred while fetching exception information. Details: {}".format(str(e)))
+            self.error_print('Error occurred while fetching exception information. Details: {}'.format(str(e)))
 
         if not error_code:
-            error_text = "Error Message: {}".format(error_message)
+            error_text = 'Error Message: {}'.format(error_message)
         else:
-            error_text = "Error Code: {}. Error Message: {}".format(error_code, error_message)
+            error_text = 'Error Code: {}. Error Message: {}'.format(error_code, error_message)
 
         return error_text
 
@@ -478,7 +478,7 @@ class SlackBotConnector(phantom.BaseConnector):
         try:
             r = method(rest_url, verify=verify, headers=headers, data=json.dumps(body))
         except Exception as e:
-            return RetVal(action_result.set_status(phantom.APP_ERROR, "{0}. {1}".format(
+            return RetVal(action_result.set_status(phantom.APP_ERROR, '{0}. {1}'.format(
                 SLACK_BOT_ERROR_REST_CALL_FAILED, self._get_error_message_from_exception(e))), None)
 
         try:
@@ -487,7 +487,7 @@ class SlackBotConnector(phantom.BaseConnector):
             return RetVal(action_result.set_status(phantom.APP_ERROR, SLACK_BOT_ERROR_UNABLE_TO_DECODE_JSON_RESPONSE), None)
 
         if 'failed' in resp_json:
-            return RetVal(action_result.set_status(phantom.APP_ERROR, "{0}. Message: {1}".format(
+            return RetVal(action_result.set_status(phantom.APP_ERROR, '{0}. Message: {1}'.format(
                 SLACK_BOT_ERROR_REST_CALL_FAILED, resp_json.get('message', 'NA'))), None)
 
         if 200 <= r.status_code <= 399:
@@ -498,7 +498,7 @@ class SlackBotConnector(phantom.BaseConnector):
         if resp_json:
             details = json.dumps(resp_json).replace('{', '{{').replace('}', '}}')
 
-        return RetVal(action_result.set_status(phantom.APP_ERROR, "Error from server: Status code: {0} Details: {1}".format(
+        return RetVal(action_result.set_status(phantom.APP_ERROR, 'Error from server: Status code: {0} Details: {1}'.format(
             r.status_code, details)), None)
 
     def _make_slack_rest_call(self, action_result, endpoint, body, headers={}, files={}):
@@ -507,13 +507,13 @@ class SlackBotConnector(phantom.BaseConnector):
 
         # send api call to slack
         try:
-            response = requests.post("{}{}".format(self._base_url, endpoint),
+            response = requests.post('{}{}'.format(self._base_url, endpoint),
                                      data=body,
                                      headers=headers,
                                      files=files,
                                      timeout=SLACK_BOT_DEFAULT_TIMEOUT)
         except Exception as e:
-            return RetVal(action_result.set_status(phantom.APP_ERROR, "{}. {}".format(
+            return RetVal(action_result.set_status(phantom.APP_ERROR, '{}. {}'.format(
                 SLACK_BOT_ERROR_SERVER_CONNECTION, self._get_error_message_from_exception(e))), None)
 
         return self._process_response(response, action_result)
@@ -562,12 +562,12 @@ class SlackBotConnector(phantom.BaseConnector):
 
         action_result.add_data(resp_json)
 
-        self.save_progress("Auth check to Slack passed. Configuring app for team, {}".format(resp_json.get('team', 'Unknown Team')))
+        self.save_progress('Auth check to Slack passed. Configuring app for team, {}'.format(resp_json.get('team', 'Unknown Team')))
 
         bot_username = resp_json.get('user')
         bot_user_id = resp_json.get('user_id')
 
-        self.save_progress("Got username, {0}, and user ID, {1}, for the bot".format(bot_username, bot_user_id))
+        self.save_progress('Got username, {0}, and user ID, {1}, for the bot'.format(bot_username, bot_user_id))
 
         self._state['bot_name'] = bot_username
         self._state['bot_id'] = bot_user_id
@@ -600,7 +600,7 @@ class SlackBotConnector(phantom.BaseConnector):
 
     def _start_bot(self, param):
 
-        self.debug_print("Inside start bot action")
+        self.debug_print('Inside start bot action')
         action_result = self.add_action_result(phantom.ActionResult(dict(param)))
 
         set_bot_id_failure_result = self._set_bot_id(action_result)
@@ -608,11 +608,11 @@ class SlackBotConnector(phantom.BaseConnector):
             return set_bot_id_failure_result
 
         pid = self._state.get('pid')
-        self.debug_print("PID of Bot : {}".format(pid))
+        self.debug_print('PID of Bot : {}'.format(pid))
         if pid:
             try:
                 if 'slack_bot.py' in sh.ps('ww', pid):  # pylint: disable=E1101
-                    self.save_progress("Detected SlackBot running with pid {0}".format(pid))
+                    self.save_progress('Detected SlackBot running with pid {0}'.format(pid))
                     return action_result.set_status(phantom.APP_SUCCESS, SLACK_BOT_SUCCESS_SLACK_BOT_RUNNING)
             except Exception:
                 pass
@@ -624,8 +624,8 @@ class SlackBotConnector(phantom.BaseConnector):
             ps_out = sh.grep(sh.ps('ww', 'aux'), 'slack_bot.py')  # pylint: disable=E1101
             old_pid = shlex.split(str(ps_out))[1]
             if app_version not in ps_out:
-                self.save_progress(f"Found an old version of slack_bot running with pid {old_pid}. "
-                                   "Please stop it before trying to start a new bot.")
+                self.save_progress(f'Found an old version of slack_bot running with pid {old_pid}. '
+                                   'Please stop it before trying to start a new bot.')
                 return action_result.set_status(phantom.APP_SUCCESS, SLACK_BOT_ERROR_OLD_SLACK_BOT_VERSION_RUNNING)
             elif asset_id in ps_out:  # pylint: disable=E1101
                 self._state['pid'] = int(old_pid)
@@ -639,28 +639,28 @@ class SlackBotConnector(phantom.BaseConnector):
         headers = {
             'Authorization': 'Bearer {}'.format(self._socket_token)
         }
-        url = "{}apps.connections.open".format(SLACK_BASE_URL)
+        url = '{}apps.connections.open'.format(SLACK_BASE_URL)
         resp = requests.post(url, headers=headers, timeout=30)
         resp = resp.json()
 
         if not resp.get('ok'):
-            self.save_progress("Failed to start SlackBot")
+            self.save_progress('Failed to start SlackBot')
             return action_result.set_status(phantom.APP_ERROR, SLACK_BOT_SOCKET_TOKEN_ERROR)
 
-        self.save_progress("Starting SlackBot")
+        self.save_progress('Starting SlackBot')
         proc = subprocess.Popen(['phenv', 'python3', slack_bot_filename, asset_id, app_version])
         self._state['pid'] = proc.pid
-        self.save_progress("Started SlackBot with pid: {0}".format(proc.pid))
+        self.save_progress('Started SlackBot with pid: {0}'.format(proc.pid))
 
         return action_result.set_status(phantom.APP_SUCCESS, SLACK_BOT_SUCCESS_SLACK_BOT_STARTED)
 
     def _stop_bot(self, param):
 
-        self.debug_print("Inside stop bot action")
+        self.debug_print('Inside stop bot action')
         action_result = self.add_action_result(phantom.ActionResult(dict(param)))
 
         pid = self._state.get('pid')
-        self.debug_print("PID of Bot : {}".format(pid))
+        self.debug_print('PID of Bot : {}'.format(pid))
         if pid:
             self._state.pop('pid')
             try:
@@ -700,19 +700,19 @@ class SlackBotConnector(phantom.BaseConnector):
             try:
                 # use manual on poll action to 'reload' state file into slack_bot.py
                 if self.is_poll_now():
-                    self.save_progress("Container Count: {}".format(container_count))
+                    self.save_progress('Container Count: {}'.format(container_count))
                     if container_count == 1234:
                         sh.kill(pid)
-                        self.save_progress("Container count set to 1234, stopping slack_bot.py at pid {}".format(pid))
+                        self.save_progress('Container count set to 1234, stopping slack_bot.py at pid {}'.format(pid))
                     elif container_count == int(pid):
                         sh.kill(pid)
-                        self.save_progress("pid passed in as container count, stopping bot")
-                        return action_result.set_status(phantom.APP_SUCCESS, "bot has been stopped")
+                        self.save_progress('pid passed in as container count, stopping bot')
+                        return action_result.set_status(phantom.APP_SUCCESS, 'bot has been stopped')
                     else:
-                        self.save_progress("HINT: Set Maximum Containers to 1234 to restart slack_bot, or set to PID to stop slack_bot")
+                        self.save_progress('HINT: Set Maximum Containers to 1234 to restart slack_bot, or set to PID to stop slack_bot')
 
                 if 'slack_bot.py' in sh.ps('ww', pid):  # pylint: disable=E1101
-                    self.save_progress("Detected SlackBot running with pid {0}".format(pid))
+                    self.save_progress('Detected SlackBot running with pid {0}'.format(pid))
                     return action_result.set_status(phantom.APP_SUCCESS, SLACK_BOT_SUCCESS_SLACK_BOT_RUNNING)
             except Exception:
                 pass
@@ -724,7 +724,7 @@ class SlackBotConnector(phantom.BaseConnector):
             ps_out = sh.grep(sh.ps('ww', 'aux'), 'slack_bot.py')  # pylint: disable=E1101
             old_pid = shlex.split(str(ps_out))[1]
             if app_version not in ps_out:
-                self.save_progress("Found an old version of slack_bot running with pid {}, going to kill it".format(old_pid))
+                self.save_progress('Found an old version of slack_bot running with pid {}, going to kill it'.format(old_pid))
                 sh.kill(old_pid)  # pylint: disable=E1101
             elif asset_id in ps_out:  # pylint: disable=E1101
                 self._state['pid'] = int(old_pid)
@@ -738,18 +738,18 @@ class SlackBotConnector(phantom.BaseConnector):
         headers = {
             'Authorization': 'Bearer {}'.format(self._socket_token)
         }
-        url = "{}apps.connections.open".format(SLACK_BASE_URL)
+        url = '{}apps.connections.open'.format(SLACK_BASE_URL)
         resp = requests.post(url, headers=headers, timeout=30)
         resp = resp.json()
 
         if not resp.get('ok'):
-            self.save_progress("Failed to start SlackBot")
+            self.save_progress('Failed to start SlackBot')
             return action_result.set_status(phantom.APP_ERROR, SLACK_BOT_SOCKET_TOKEN_ERROR)
 
-        self.save_progress("Starting SlackBot")
+        self.save_progress('Starting SlackBot')
         proc = subprocess.Popen(['phenv', 'python3', slack_bot_filename, asset_id, app_version])
         self._state['pid'] = proc.pid
-        self.save_progress("Started SlackBot with pid: {0}".format(proc.pid))
+        self.save_progress('Started SlackBot with pid: {0}'.format(proc.pid))
 
         return action_result.set_status(phantom.APP_SUCCESS, SLACK_BOT_SUCCESS_SLACK_BOT_STARTED)
 
@@ -760,7 +760,7 @@ class SlackBotConnector(phantom.BaseConnector):
         # Get the action that we are supposed to execute for this App Run
         action_id = self.get_action_identifier()
 
-        self.debug_print("action_id: {}".format(self.get_action_identifier()))
+        self.debug_print('action_id: {}'.format(self.get_action_identifier()))
 
         if action_id == ACTION_ID_TEST_CONNECTIVITY:
             ret_val = self._test_connectivity(param)
@@ -777,7 +777,7 @@ class SlackBotConnector(phantom.BaseConnector):
 if __name__ == '__main__':
 
     if len(sys.argv) < 2:
-        print("No test json specified as input")
+        print('No test json specified as input')
         sys.exit(0)
 
     with open(sys.argv[1]) as f:
