@@ -576,10 +576,36 @@ class SlackBotConnector(phantom.BaseConnector):
 
         return action_result.set_status(phantom.APP_SUCCESS)
 
+    def _set_bot_id(self, action_result):
+        """
+        Get the current bot ID and set it in the state file.
+
+        We need to save the bot username and bot id to state file in case test connectivity has not been run.
+        Otherwise, certain bot actions will fail if these values do not exist in the state file loaded when
+        starting the bot.
+        """
+        ret_val, resp_json = self._make_slack_rest_call(action_result, SLACK_BOT_AUTH_TEST, {})
+        if not ret_val:
+            return ret_val
+
+        bot_id = resp_json.get('user_id')
+        bot_username = resp_json.get('user')
+
+        if not bot_id:
+            return action_result.set_status(phantom.APP_ERROR, SLACK_BOT_ERROR_COULD_NOT_GET_BOT_ID)
+
+        self._state['bot_name'] = bot_username
+        self._state['bot_id'] = bot_id
+        self.save_state(self._state)
+
     def _start_bot(self, param):
 
         self.debug_print("Inside start bot action")
         action_result = self.add_action_result(phantom.ActionResult(dict(param)))
+
+        set_bot_id_failure_result = self._set_bot_id(action_result)
+        if set_bot_id_failure_result:
+            return set_bot_id_failure_result
 
         pid = self._state.get('pid')
         self.debug_print("PID of Bot : {}".format(pid))
@@ -661,21 +687,10 @@ class SlackBotConnector(phantom.BaseConnector):
     def _on_poll(self, param):
 
         action_result = self.add_action_result(phantom.ActionResult(dict(param)))
-        ret_val, resp_json = self._make_slack_rest_call(action_result, SLACK_BOT_AUTH_TEST, {})
-        if not ret_val:
-            return ret_val
 
-        bot_id = resp_json.get('user_id')
-        bot_username = resp_json.get('user')
-
-        if not bot_id:
-            return action_result.set_status(phantom.APP_ERROR, SLACK_BOT_ERROR_COULD_NOT_GET_BOT_ID)
-
-        # we need to save the bot username and bot id to state file in case test connectivity has not been run
-        # certain bot actions will fail if these values do not exist in the state file loaded at bot start
-        self._state['bot_name'] = bot_username
-        self._state['bot_id'] = bot_id
-        self.save_state(self._state)
+        set_bot_id_failure_result = self._set_bot_id(action_result)
+        if set_bot_id_failure_result:
+            return set_bot_id_failure_result
 
         # we are using container count to decide if we will restart the bot or not
         container_count = int(param.get('container_count'))

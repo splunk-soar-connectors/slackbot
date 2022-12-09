@@ -1095,14 +1095,11 @@ class SlackBot(object):
                     if out_text.strip() == self.cmd_start:
                         self._post_message(
                             SLACK_BOT_HELP_MESSAGE,
-                            body.get('event', {})
-                            .get('channel', '#general'),
+                            body.get('event', {}).get('channel', '#general'),
                         )
 
                     channel = body.get('event', {}).get('channel', '#general')
-                    logging.debug('Parsed channel: %s', channel)
                     command = out_text[len(self.cmd_start):].strip()
-                    logging.debug('Parsed command: %s', command)
 
                     if command and channel:
                         command = self._sanitize(command)
