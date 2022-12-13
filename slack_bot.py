@@ -538,9 +538,9 @@ class SlackBot(object):
 
                 asset_name = 'N/A' if asset is None else asset.name
 
-                msg = 'Action:  {}\n'.format(resp.get('action'))
-                msg += 'Asset:  {}\n'.format(asset_name)
-                msg += 'Status:  {}\n'.format(status)
+                message = 'Action:  {}\n'.format(resp.get('action'))
+                message += 'Asset:  {}\n'.format(asset_name)
+                message += 'Status:  {}\n'.format(status)
 
                 result_data = resp.get('result_data', [])
 
@@ -548,37 +548,37 @@ class SlackBot(object):
 
                     result_data = result_data[0]
 
-                    msg += 'Message: {}\n'.format(result_data.get('message', status))
+                    message += 'Message: {}\n'.format(result_data.get('message', status))
 
                     parameters = result_data.get('parameter', [])
 
                     if len(parameters) > 1:
 
-                        msg += 'Parameters:\n'
+                        message += 'Parameters:\n'
 
                         for key, value in six.iteritems(parameters):
 
                             if key == 'context':
                                 continue
 
-                            msg += '  {0}: {1}\n'.format(key, value)
+                            message += '  {0}: {1}\n'.format(key, value)
 
                     summary = result_data.get('summary', '')
 
                     if summary:
 
-                        msg += 'Summary:\n'
+                        message += 'Summary:\n'
 
                         for key, value in six.iteritems(summary):
-                            msg += '  {0}: {1}\n'.format(key, value)
+                            message += '  {0}: {1}\n'.format(key, value)
 
                 else:
 
-                    msg += 'Message: {}\n'.format(resp.get('message', status))
+                    message += 'Message: {}\n'.format(resp.get('message', status))
 
             self.app_run_queue.remove((app_run_id, channel))
 
-            self._post_message(msg, channel)
+            self._post_message(message, channel)
 
     def _check_playbook_queue(self):
 
@@ -598,16 +598,16 @@ class SlackBot(object):
 
             if status in ['success', 'failed']:
 
-                msg = 'Playbook: {}\n'.format(resp.get('playbook', 'unknown'))
-                msg += 'Playbook run ID: {}\n'.format(resp.get('id', 'unknown'))
-                msg += 'Playbook run result: {}\n'.format(status)
+                message = 'Playbook: {}\n'.format(resp.get('playbook', 'unknown'))
+                message += 'Playbook run ID: {}\n'.format(resp.get('id', 'unknown'))
+                message += 'Playbook run result: {}\n'.format(status)
 
             else:
                 continue
 
             self.playbook_queue.remove((playbook_id, channel))
 
-            self._post_message(msg, channel)
+            self._post_message(message, channel)
 
             return
 
@@ -649,7 +649,7 @@ class SlackBot(object):
 
         return string
 
-    def _post_message(self, msg, channel, code_block=True):
+    def _post_message(self, message, channel, code_block=True):
 
         url = SLACK_BASE_URL + 'chat.postMessage'
 
@@ -658,25 +658,25 @@ class SlackBot(object):
         body['token'] = self.bot_token
         body['as_user'] = True
 
-        if msg:
+        if message:
 
-            if len(msg) <= SLACK_BOT_JSON_MESSAGE_LIMIT:
+            if len(message) <= SLACK_BOT_JSON_MESSAGE_LIMIT:
 
-                body['text'] = '```{}```'.format(msg) if code_block else msg
+                body['text'] = '```{}```'.format(message) if code_block else message
 
                 requests.post(url, data=body, timeout=SLACK_BOT_DEFAULT_TIMEOUT)
 
                 return
 
-            last_newline = msg[:SLACK_BOT_JSON_MESSAGE_LIMIT - 1].rfind('\n')
+            last_newline = message[:SLACK_BOT_JSON_MESSAGE_LIMIT - 1].rfind('\n')
 
-            to_send = msg[:last_newline]
+            to_send = message[:last_newline]
 
             body['text'] = '```{}```'.format(to_send) if code_block else to_send
 
             requests.post(url, data=body, timeout=SLACK_BOT_DEFAULT_TIMEOUT)
 
-            self._post_message(msg[last_newline + 1:], channel, code_block=code_block)
+            self._post_message(message[last_newline + 1:], channel, code_block=code_block)
 
     def _parse_action(self, command):
 
@@ -973,7 +973,7 @@ class SlackBot(object):
             container_dict = self._create_container_dict()
 
             if container_dict is None:
-                return False, 'Could not get containers, error contactin REST endpoint'
+                return False, 'Could not get containers, error contacting the REST endpoint'
 
             if not container_dict:
                 return False, 'Found no containers on the Phantom instance'
@@ -1037,34 +1037,46 @@ class SlackBot(object):
 
         self._generate_dicts()
 
+        message = []
+
         if parsed_args.listee == 'actions':
-            msg = ''
             sorted_actions = list(self.action_dict.keys())
             sorted_actions.sort()
 
             for action in sorted_actions:
-                msg += '{}\n'.format(action)
+                message.append(str(action))
 
-            msg += '\nFor more info on an action, try "act <action_name>"'
+            message.append('')
+            message.append('For more info on an action, try "act <action_name>"')
 
         elif parsed_args.listee == 'containers':
-            msg = ''
-
             try:
-                r = requests.get(self.base_url + 'rest/container?page_size=0', headers=self.headers, auth=self.auth,
-                                 verify=self.verify, timeout=SLACK_BOT_DEFAULT_TIMEOUT)
+                rest_container_endpoint = 'rest/container?page_size=0'
+                r = requests.get(f'{self.base_url}{rest_container_endpoint}',
+                                 headers=self.headers,
+                                 auth=self.auth,
+                                 verify=self.verify,
+                                 timeout=SLACK_BOT_DEFAULT_TIMEOUT)
             except Exception as e:
+                logging.exception('Failed to retrieve container data.')
                 return False, 'Could not retrieve container data. Could not connect to REST endpoint: {}'.format(e)
 
-            for container in r.json()['data']:
+            try:
+                sorted_containers = sorted(r.json()['data'], key=lambda container: container['id'])
+            except Exception as e:
+                logging.exception('Failed to parse retrieved container data.')
+                return False, 'Could not parse container data: {}'.format(e)
+
+            for container in sorted_containers:
                 try:
-                    msg += 'ID: {}'.format(container['id']).ljust(10) + 'Name: {}\n'.format(container['name'])
+                    message.append(f'ID: {container["id"]}'.ljust(10) + f'Name: {container["name"]}')
                 except Exception:
-                    msg += 'Container info could not be parsed'
+                    message.append('Container info could not be parsed')
 
-            msg += '\nFor more information on a container, try "get_container <container_id>"'
+            message.append('')
+            message.append('For more information on a container, try "get_container <container_id>"')
 
-        return True, msg
+        return True, '\n'.join(message)
 
     def _from_on_poll(self):
         """
@@ -1192,43 +1204,43 @@ class SlackBot(object):
 
         cmd_type = args[0]
         if cmd_type not in ['act', 'run_playbook', 'get_container', 'list']:
-            msg = 'Unknown Command\n\n {}'.format(SLACK_BOT_HELP_MESSAGE)
-            self._post_message(msg, channel)
+            message = 'Unknown Command\n\n {}'.format(SLACK_BOT_HELP_MESSAGE)
+            self._post_message(message, channel)
             return
 
         if not self._check_command_authorization(cmd_type):
-            msg = SLACK_BOT_ERROR_COMMAND_NOT_PERMITTED
-            self._post_message(msg, channel)
+            message = SLACK_BOT_ERROR_COMMAND_NOT_PERMITTED
+            self._post_message(message, channel)
             return
 
         if cmd_type == 'act':
             logging.info('**permit_bot_act: %s', self.permit_act)
             status, result = self._parse_action(args[1:])
             if status:
-                msg = self._action_run_request(result, channel)
+                message = self._action_run_request(result, channel)
             else:
-                msg = result
+                message = result
 
         elif cmd_type == 'run_playbook':
             logging.info('**permit_bot_playbook: %s', self.permit_playbook)
             status, result = self._parse_playbook(args[1:])
             if status:
-                msg = self._playbook_request(result, channel)
+                message = self._playbook_request(result, channel)
             else:
-                msg = result
+                message = result
 
         elif cmd_type == 'get_container':
             logging.info('**permit_bot_container: %s', self.permit_container)
-            status, msg = self._parse_container(args[1:])
+            status, message = self._parse_container(args[1:])
 
         elif cmd_type == 'list':
             logging.info('**permit_bot_list: %s', self.permit_list)
-            status, msg = self._parse_list(args[1:])
+            status, message = self._parse_list(args[1:])
 
         else:
-            msg = SLACK_BOT_HELP_MESSAGE
+            message = SLACK_BOT_HELP_MESSAGE
 
-        self._post_message(msg, channel)
+        self._post_message(message, channel)
 
 
 def main():  # noqa
