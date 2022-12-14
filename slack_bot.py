@@ -23,7 +23,6 @@ from pathlib import Path
 import encryption_helper
 import requests
 import simplejson as json
-import six
 import urllib3
 from slack_bolt import App as slack_app
 from slack_bolt.adapter.socket_mode import SocketModeHandler
@@ -33,9 +32,9 @@ from slack_bot_consts import *
 urllib3.disable_warnings()
 
 app_dir = os.path.dirname(os.path.abspath(__file__))
-if os.path.exists('{}/dependencies'.format(app_dir)):
-    os.sys.path.insert(0, '{}/dependencies/websocket-client'.format(app_dir))
-    os.sys.path.insert(0, '{}/dependencies'.format(app_dir))
+if os.path.exists(f'{app_dir}/dependencies'):
+    os.sys.path.insert(0, f'{app_dir}/dependencies/websocket-client')
+    os.sys.path.insert(0, f'{app_dir}/dependencies')
 
 
 SLACK_BOT_HELP_MESSAGE = """
@@ -112,16 +111,18 @@ For example:
 SLACK_BOT_LIST_HELP_MESSAGE = """
 usage:
 
-list <actions|containers>
+list <actions|containers|playbooks>
 
 arguments:
   --help        show this help message and exit
-  object        name of object to list, can be 'actions' or 'containers'
+  object        name of object to list, can be 'actions', 'containers', or 'playbooks'
 
 For example:
     @<bot_username> list containers
   or
     @<bot_username> list actions
+  or
+    @<bot_username> list playbooks
 """
 
 
@@ -188,7 +189,7 @@ class Action():
 
     def add_parameters(self, params):
 
-        for param_name, param_dict in six.iteritems(params):
+        for param_name, param_dict in params.items():
 
             required = param_dict.get('required', False)
             data_type = param_dict['data_type']
@@ -575,16 +576,16 @@ class SlackBot(object):
                 continue
 
             status = resp.get('status', 'unknown')
-            message = []
+            message_list = []
             if status in ['success', 'failed']:
 
                 asset = self.asset_dict.get(resp.get('asset'))
 
                 asset_name = 'N/A' if asset is None else asset.name
 
-                message.append(f'Action:  {resp.get("action")}')
-                message.append(f'Asset:  {asset_name}')
-                message.append(f'Status:  {status}')
+                message_list.append(f'Action:  {resp.get("action")}')
+                message_list.append(f'Asset:  {asset_name}')
+                message_list.append(f'Status:  {status}')
 
                 result_data = resp.get('result_data', [])
 
@@ -592,37 +593,37 @@ class SlackBot(object):
 
                     result_data = result_data[0]
 
-                    message.append(f'Message: {result_data.get("message", status)}')
+                    message_list.append(f'Message: {result_data.get("message", status)}')
 
                     parameters = result_data.get('parameter', [])
 
                     if len(parameters) > 1:
 
-                        message.append('Parameters:')
+                        message_list.append('Parameters:')
 
                         for key, value in parameters.items():
 
                             if key == 'context':
                                 continue
 
-                            message.append(f'  {key}: {value}')
+                            message_list.append(f'  {key}: {value}')
 
                     summary = result_data.get('summary', '')
 
                     if summary:
 
-                        message.append('Summary:')
+                        message_list.append('Summary:')
 
                         for key, value in summary.items():
-                            message.append(f'  {key}: {value}')
+                            message_list.append(f'  {key}: {value}')
 
                 else:
 
-                    message.append(f'Message: {resp.get("message", status)}')
+                    message_list.append(f'Message: {resp.get("message", status)}')
 
             self.app_run_queue.remove((app_run_id, channel))
 
-            self._post_message('\n'.join(message), channel)
+            self._post_message('\n'.join(message_list), channel)
 
     def _check_playbook_queue(self):
 
@@ -728,7 +729,7 @@ class SlackBot(object):
 
         try:
             parsed_args = self.action_parser.parse_args(command)
-        except:  # passing type as Exception weren't able to to catch SystemError exception. Even with multiple exceptions it didn't work
+        except:  # We also want to catch SystemError exceptions
             return False, SLACK_BOT_ACTION_HELP_MESSAGE
 
         self._generate_dicts()
@@ -881,9 +882,9 @@ class SlackBot(object):
                     if asset_id in self.asset_dict:
                         message += '\n{}'.format(self.asset_dict[asset_id].name)
 
-            return (message, None, None)
+            return message, None, None
 
-        return (None, asset_object, action_object)
+        return None, asset_object, action_object
 
     def _parse_params(self, params, param_dict, target):
 
@@ -916,7 +917,7 @@ class SlackBot(object):
         target['parameters'] = [parameter_dict]
 
         # Make sure all required parameters are present
-        for key, value in six.iteritems(param_dict):
+        for key, value in param_dict.items():
 
             if value.required:
 
@@ -932,7 +933,7 @@ class SlackBot(object):
         try:
             args = self.playbook_parser.parse_args(command)
 
-        except:
+        except:  # We also want to catch SystemError exceptions
             return False, SLACK_BOT_PLAYBOOK_HELP_MESSAGE
 
         request_body = {}
@@ -957,8 +958,7 @@ class SlackBot(object):
 
         try:
             parsed_args = self.container_parser.parse_args(command)
-
-        except:
+        except:  # We also want to catch SystemError exceptions
             return False, SLACK_BOT_CONTAINER_HELP_MESSAGE
 
         container = parsed_args.container
@@ -968,16 +968,14 @@ class SlackBot(object):
         if (container is not None) == (tags is not None):
             return False, SLACK_BOT_CONTAINER_HELP_MESSAGE
 
+        def create_tags_message(tags):
+            return ', '.join(f'"{tag}"' for tag in tags)
+
         if container:
-
             container_info = {}
-
             try:
-
                 container = int(container)
-
                 try:
-
                     r = requests.get(f'{SoarRestEndpoint.CONTAINER.full_path(self.base_url)}/{container}',
                                      headers=self.headers,
                                      auth=self.auth,
@@ -994,13 +992,13 @@ class SlackBot(object):
                 except Exception:
                     return False, 'Could not parse given container ID'
 
-            message = ''
+            message_list = []
 
-            for key, value in six.iteritems(container_info):
+            for key, value in container_info.items():
 
                 if key == 'tags':
 
-                    message += 'tags: '
+                    message_list += 'Tags: '
 
                     for tag in value:
                         message += ' "{}",'.format(tag)
@@ -1018,8 +1016,7 @@ class SlackBot(object):
 
             return True, message
 
-        elif tags:
-
+        if tags:
             container_dict = self._create_container_dict()
 
             if container_dict is None:
@@ -1073,38 +1070,37 @@ class SlackBot(object):
                     message_list.append(f'Name: {info["name"]}')
                     message_list.append(f'ID: {info["id"]}')
                     message_list.append(f'Label: {info["label"]}')
-                    tags_message = ', '.join([f'"{tag}"' for tag in info['tags']])
-                    message_list.append(f'Tags: {tags_message}')
+                    message_list.append(f'Tags: {create_tags_message(info["tags"])}')
                 except Exception:
                     message_list.append(f'Could not parse container info for container {container}')
 
                 message_list.append('')
 
             if bad_tags:
-                message += 'Tags with no results: {}'.format(' '.join(bad_tags))
+                message_list.append(f'Tags with no results: {create_tags_message(bad_tags)}')
 
-            return True, message
+            return True, '\n'.join(message_list)
 
     def _parse_list(self, command):
 
         try:
             parsed_args = self.list_parser.parse_args(command)
-        except:
+        except:  # We also want to catch SystemError exceptions
             return False, SLACK_BOT_LIST_HELP_MESSAGE
 
         self._generate_dicts()
 
-        message = []
+        message_list = []
 
         if parsed_args.listee == 'actions':
             sorted_actions = list(self.action_dict.keys())
             sorted_actions.sort()
 
             for action in sorted_actions:
-                message.append(str(action))
+                message_list.append(str(action))
 
-            message.append('')
-            message.append('For more info on an action, try "act <action_name>"')
+            message_list.append('')
+            message_list.append('For more info on an action, try "act <action_name>"')
 
         elif parsed_args.listee == 'containers':
             try:
@@ -1127,14 +1123,14 @@ class SlackBot(object):
 
             for container in sorted_containers:
                 try:
-                    message.append(f'ID: {container["id"]}'.ljust(10) + f'Name: {container["name"]}')
+                    message_list.append(f'ID: {container["id"]}'.ljust(10) + f'Name: {container["name"]}')
                 except Exception:
-                    message.append('Container info could not be parsed')
+                    message_list.append('Container info could not be parsed')
 
-            message.append('')
-            message.append('For more information on a container, try "get_container <container_id>"')
+            message_list.append('')
+            message_list.append('For more information on a container, try "get_container <container_id>"')
 
-        return True, '\n'.join(message)
+        return True, '\n'.join(message_list)
 
     def _from_on_poll(self):
         """

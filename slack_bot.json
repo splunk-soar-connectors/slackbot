@@ -268,7 +268,7 @@
         "wheel": [
             {
                 "module": "Django",
-                "input_file": "wheels/py3/Django-3.2.16-py3-none-any.whl"
+                "input_file": "wheels/py3/Django-3.2.13-py3-none-any.whl"
             },
             {
                 "module": "asgiref",
@@ -280,7 +280,7 @@
             },
             {
                 "module": "certifi",
-                "input_file": "wheels/py3/certifi-2022.9.24-py3-none-any.whl"
+                "input_file": "wheels/py3/certifi-2022.12.7-py3-none-any.whl"
             },
             {
                 "module": "charset_normalizer",
@@ -307,16 +307,12 @@
                 "input_file": "wheels/py36/simplejson-3.17.5-cp36-cp36m-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_12_x86_64.manylinux2010_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl"
             },
             {
-                "module": "six",
-                "input_file": "wheels/shared/six-1.15.0-py2.py3-none-any.whl"
-            },
-            {
                 "module": "slack_bolt",
                 "input_file": "wheels/shared/slack_bolt-1.14.0-py2.py3-none-any.whl"
             },
             {
                 "module": "slack_sdk",
-                "input_file": "wheels/shared/slack_sdk-3.19.3-py2.py3-none-any.whl"
+                "input_file": "wheels/shared/slack_sdk-3.19.5-py2.py3-none-any.whl"
             },
             {
                 "module": "soupsieve",
@@ -332,7 +328,7 @@
             },
             {
                 "module": "urllib3",
-                "input_file": "wheels/shared/urllib3-1.26.12-py2.py3-none-any.whl"
+                "input_file": "wheels/shared/urllib3-1.26.13-py2.py3-none-any.whl"
             },
             {
                 "module": "websocket_client",
@@ -344,7 +340,7 @@
         "wheel": [
             {
                 "module": "Django",
-                "input_file": "wheels/py3/Django-3.2.16-py3-none-any.whl"
+                "input_file": "wheels/py3/Django-3.2.13-py3-none-any.whl"
             },
             {
                 "module": "asgiref",
@@ -356,7 +352,7 @@
             },
             {
                 "module": "certifi",
-                "input_file": "wheels/py3/certifi-2022.9.24-py3-none-any.whl"
+                "input_file": "wheels/py3/certifi-2022.12.7-py3-none-any.whl"
             },
             {
                 "module": "charset_normalizer",
@@ -383,16 +379,12 @@
                 "input_file": "wheels/py39/simplejson-3.17.5-cp39-cp39-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_12_x86_64.manylinux2010_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl"
             },
             {
-                "module": "six",
-                "input_file": "wheels/shared/six-1.15.0-py2.py3-none-any.whl"
-            },
-            {
                 "module": "slack_bolt",
                 "input_file": "wheels/shared/slack_bolt-1.14.0-py2.py3-none-any.whl"
             },
             {
                 "module": "slack_sdk",
-                "input_file": "wheels/shared/slack_sdk-3.19.3-py2.py3-none-any.whl"
+                "input_file": "wheels/shared/slack_sdk-3.19.5-py2.py3-none-any.whl"
             },
             {
                 "module": "soupsieve",
@@ -404,7 +396,7 @@
             },
             {
                 "module": "urllib3",
-                "input_file": "wheels/shared/urllib3-1.26.12-py2.py3-none-any.whl"
+                "input_file": "wheels/shared/urllib3-1.26.13-py2.py3-none-any.whl"
             },
             {
                 "module": "websocket_client",

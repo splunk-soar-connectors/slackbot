@@ -37,11 +37,6 @@ License: MIT
 Copyright 2003-2004 Lawrence E. Rosen
 Copyright 2006 Bob Ippolito
 
-Library: six
-Version: 1.15.0
-License: MIT
-Copyright 2010-2020 Benjamin Peterson
-
 Library: websocket-client
 Version: 1.2.1
 License: Apache Software License (Apache 2.0)
