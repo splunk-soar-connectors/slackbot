@@ -12,8 +12,32 @@
 # the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
 # either express or implied. See the License for the specific language governing permissions
 # and limitations under the License.
-#
-#
+
+from enum import Enum
+
+
+class SoarRestEndpoint(str, Enum):
+    """ SOAR v1 endpoints. """
+
+    ACTION_RUN = 'action_run'
+    APP = 'app'
+    APP_ACTION = 'app_action'
+    APP_RUN = 'app_run'
+    APP_RUNS = 'action_run/{}/app_runs'
+    BUILD_ACTION = 'build_action'
+    CONTAINER = 'container'
+    PLAYBOOK_RUN = 'playbook_run'
+    SYSTEM_INFO = 'system_info'
+
+    def __new__(cls, endpoint):
+        return f'rest/{endpoint}'
+
+    def full_path(self, base_url):
+        """ Create a full path including the specified base URL. """
+        base_url = base_url.rstrip('/')
+        return f'{base_url}/{self.value}'
+
+
 # Action IDs
 ACTION_ID_TEST_CONNECTIVITY = 'test_connectivity'
 ACTION_ID_START_BOT = 'start_bot'
@@ -31,8 +55,6 @@ SLACK_BOT_JSON_PERMIT_BOT_CONTAINER = 'permit_bot_container'
 SLACK_BOT_JSON_PERMIT_BOT_LIST = 'permit_bot_list'
 SLACK_BOT_JSON_PERMITTED_USERS = 'permitted_bot_users'
 SLACK_BOT_JSON_MESSAGE_LIMIT = 4000
-
-SLACK_BOT_PHANTOM_SYS_INFO_URL = '{url}rest/system_info'
 
 SLACK_BOT_APP_ID = '2591bdbc-21e1-4aa1-bf64-e2aa5c733a4a'
 

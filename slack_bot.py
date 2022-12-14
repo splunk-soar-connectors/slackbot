@@ -43,7 +43,8 @@ usage:
 
 @<bot_username> act|run_playbook|get_container|list
 
-For more information on a specific command, try @<bot_username> <command> --helpprint                     """
+For more information on a specific command, try @<bot_username> <command> --help
+"""
 
 SLACK_BOT_ACTION_HELP_MESSAGE = """
 usage:
@@ -67,7 +68,7 @@ optional arguments:
 
 For example:
     @<bot_username> act "geolocate ip" --parameters ip:1.1.1.1 --container 1291
-                            """
+"""
 
 SLACK_BOT_PLAYBOOK_HELP_MESSAGE = """
 usage:
@@ -75,8 +76,8 @@ usage:
 run_playbook <--repo REPO PLAYBOOK_NAME | PLAYBOOK_ID> CONTAINER_ID
 
 required arguments:
-  PLYBOOK_NAME      Name of the playbook to run (Required if repo argument is included)
-  PLYBOOK_ID        ID of the playbook to run (Required if no repo argument is included)
+  PLAYBOOK_NAME      Name of the playbook to run (Required if repo argument is included)
+  PLAYBOOK_ID        ID of the playbook to run (Required if no repo argument is included)
   CONTAINER_ID      ID of container to run playbook on
 
 optional arguments:
@@ -88,7 +89,7 @@ For example:
     @<bot_username> run_playbook --repo community invesigate 25
   or
     @<bot_username> run_playbook 1 25
-                              """
+"""
 
 SLACK_BOT_CONTAINER_HELP_MESSAGE = """
 usage:
@@ -106,7 +107,7 @@ For example:
     @<bot_username> get_container --container 16
   or
     @<bot_username> get_container --tags tag1 tag2 tag3
-                               """
+"""
 
 SLACK_BOT_LIST_HELP_MESSAGE = """
 usage:
@@ -121,7 +122,15 @@ For example:
     @<bot_username> list containers
   or
     @<bot_username> list actions
-                          """
+"""
+
+
+def create_query_string(query_parameters):
+    """ Create a query URL string from a query parameters dictionary. """
+    if not query_parameters:
+        return ''
+
+    return '?' + '&'.join(f'{key}={value}' for key, value in query_parameters.items())
 
 
 def _load_app_state(asset_id):
@@ -286,8 +295,14 @@ class SlackBot(object):
         """ Maps app IDs and names to app objects """
 
         try:
-            r = requests.get(self.base_url + 'rest/app?page_size=0&pretty', headers=self.headers, auth=self.auth,
-                             verify=self.verify, timeout=SLACK_BOT_DEFAULT_TIMEOUT)
+            query_parameters = {}
+            query_parameters['page_size'] = 0
+            query_parameters['pretty'] = True
+            r = requests.get(f'{SoarRestEndpoint.APP.full_path(self.base_url)}{create_query_string(query_parameters)}',
+                             headers=self.headers,
+                             auth=self.auth,
+                             verify=self.verify,
+                             timeout=SLACK_BOT_DEFAULT_TIMEOUT)
         except Exception:
             return
 
@@ -314,8 +329,11 @@ class SlackBot(object):
         """
 
         try:
-            r = requests.get(self.base_url + 'rest/build_action', headers=self.headers, auth=self.auth,
-                             verify=self.verify, timeout=SLACK_BOT_DEFAULT_TIMEOUT)
+            r = requests.get(SoarRestEndpoint.BUILD_ACTION.full_path(self.base_url),
+                             headers=self.headers,
+                             auth=self.auth,
+                             verify=self.verify,
+                             timeout=SLACK_BOT_DEFAULT_TIMEOUT)
         except Exception:
             return
 
@@ -356,8 +374,13 @@ class SlackBot(object):
         """ Maps actions names to action objects """
 
         try:
-            r = requests.get(self.base_url + 'rest/app_action?page_size=0', headers=self.headers, auth=self.auth,
-                             verify=self.verify, timeout=SLACK_BOT_DEFAULT_TIMEOUT)
+            query_parameters = {}
+            query_parameters['page_size'] = 0
+            r = requests.get(f'{SoarRestEndpoint.APP_ACTION.full_path(self.base_url)}{create_query_string(query_parameters)}',
+                             headers=self.headers,
+                             auth=self.auth,
+                             verify=self.verify,
+                             timeout=SLACK_BOT_DEFAULT_TIMEOUT)
         except Exception:
             return
 
@@ -388,8 +411,13 @@ class SlackBot(object):
         """ Maps container IDs to container objects """
 
         try:
-            r = requests.get(self.base_url + 'rest/container?page_size=0', headers=self.headers, auth=self.auth,
-                             verify=self.verify, timeout=SLACK_BOT_DEFAULT_TIMEOUT)
+            query_parameters = {}
+            query_parameters['page_size'] = 0
+            r = requests.get(f'{SoarRestEndpoint.CONTAINER.full_path(self.base_url)}{create_query_string(query_parameters)}',
+                             headers=self.headers,
+                             auth=self.auth,
+                             verify=self.verify,
+                             timeout=SLACK_BOT_DEFAULT_TIMEOUT)
         except Exception:
             return None
 
@@ -420,8 +448,12 @@ class SlackBot(object):
 
         try:
 
-            r = requests.post(self.base_url + 'rest/action_run', json=body, headers=self.headers, auth=self.auth,
-                              verify=self.verify, timeout=SLACK_BOT_DEFAULT_TIMEOUT)
+            r = requests.post(SoarRestEndpoint.ACTION_RUN.full_path(self.base_url),
+                              json=body,
+                              headers=self.headers,
+                              auth=self.auth,
+                              verify=self.verify,
+                              timeout=SLACK_BOT_DEFAULT_TIMEOUT)
 
             resp = r.json()
 
@@ -453,7 +485,10 @@ class SlackBot(object):
 
         try:
 
-            r = requests.post(self.base_url + 'rest/playbook_run', json=body, headers=self.headers, auth=self.auth,
+            r = requests.post(SoarRestEndpoint.PLAYBOOK_RUN.full_path(self.base_url),
+                              json=body,
+                              headers=self.headers,
+                              auth=self.auth,
                               verify=self.verify, timeout=SLACK_BOT_DEFAULT_TIMEOUT)
 
             resp = r.json()
@@ -485,8 +520,11 @@ class SlackBot(object):
 
         try:
 
-            r = requests.get(self.base_url + 'rest/action_run/{}/app_runs'.format(
-                action_run_id), headers=self.headers, auth=self.auth, verify=self.verify, timeout=SLACK_BOT_DEFAULT_TIMEOUT)
+            r = requests.get(SoarRestEndpoint.APP_RUNS.full_path(self.base_url).format(action_run_id),
+                             headers=self.headers,
+                             auth=self.auth,
+                             verify=self.verify,
+                             timeout=SLACK_BOT_DEFAULT_TIMEOUT)
 
             resp = r.json()
 
@@ -502,8 +540,11 @@ class SlackBot(object):
 
             try:
 
-                r = requests.get(self.base_url + 'rest/action_run/{}'.format(
-                    action_id), headers=self.headers, auth=self.auth, verify=self.verify, timeout=SLACK_BOT_DEFAULT_TIMEOUT)
+                r = requests.get(f'{SoarRestEndpoint.ACTION_RUN.full_path(self.base_url)}/{action_id}',
+                                 headers=self.headers,
+                                 auth=self.auth,
+                                 verify=self.verify,
+                                 timeout=SLACK_BOT_DEFAULT_TIMEOUT)
 
                 resp = r.json()
 
@@ -522,8 +563,11 @@ class SlackBot(object):
 
             try:
 
-                r = requests.get(self.base_url + 'rest/app_run/{}'.format(app_run_id), headers=self.headers, auth=self.auth,
-                                 verify=self.verify, timeout=SLACK_BOT_DEFAULT_TIMEOUT)
+                r = requests.get(f'{SoarRestEndpoint.APP_RUN.full_path(self.base_url)}/{app_run_id}',
+                                 headers=self.headers,
+                                 auth=self.auth,
+                                 verify=self.verify,
+                                 timeout=SLACK_BOT_DEFAULT_TIMEOUT)
 
                 resp = r.json()
 
@@ -531,16 +575,16 @@ class SlackBot(object):
                 continue
 
             status = resp.get('status', 'unknown')
-
+            message = []
             if status in ['success', 'failed']:
 
                 asset = self.asset_dict.get(resp.get('asset'))
 
                 asset_name = 'N/A' if asset is None else asset.name
 
-                message = 'Action:  {}\n'.format(resp.get('action'))
-                message += 'Asset:  {}\n'.format(asset_name)
-                message += 'Status:  {}\n'.format(status)
+                message.append(f'Action:  {resp.get("action")}')
+                message.append(f'Asset:  {asset_name}')
+                message.append(f'Status:  {status}')
 
                 result_data = resp.get('result_data', [])
 
@@ -548,46 +592,48 @@ class SlackBot(object):
 
                     result_data = result_data[0]
 
-                    message += 'Message: {}\n'.format(result_data.get('message', status))
+                    message.append(f'Message: {result_data.get("message", status)}')
 
                     parameters = result_data.get('parameter', [])
 
                     if len(parameters) > 1:
 
-                        message += 'Parameters:\n'
+                        message.append('Parameters:')
 
-                        for key, value in six.iteritems(parameters):
+                        for key, value in parameters.items():
 
                             if key == 'context':
                                 continue
 
-                            message += '  {0}: {1}\n'.format(key, value)
+                            message.append(f'  {key}: {value}')
 
                     summary = result_data.get('summary', '')
 
                     if summary:
 
-                        message += 'Summary:\n'
+                        message.append('Summary:')
 
-                        for key, value in six.iteritems(summary):
-                            message += '  {0}: {1}\n'.format(key, value)
+                        for key, value in summary.items():
+                            message.append(f'  {key}: {value}')
 
                 else:
 
-                    message += 'Message: {}\n'.format(resp.get('message', status))
+                    message.append(f'Message: {resp.get("message", status)}')
 
             self.app_run_queue.remove((app_run_id, channel))
 
-            self._post_message(message, channel)
+            self._post_message('\n'.join(message), channel)
 
     def _check_playbook_queue(self):
 
         for playbook_id, channel in self.playbook_queue:
 
             try:
-
-                r = requests.get(self.base_url + 'rest/playbook_run/{}'.format(
-                    playbook_id), headers=self.headers, auth=self.auth, verify=self.verify, timeout=SLACK_BOT_DEFAULT_TIMEOUT)
+                r = requests.get(f'{SoarRestEndpoint.PLAYBOOK_RUN.full_path(self.base_url)}/{playbook_id}',
+                                 headers=self.headers,
+                                 auth=self.auth,
+                                 verify=self.verify,
+                                 timeout=SLACK_BOT_DEFAULT_TIMEOUT)
 
                 resp = r.json()
 
@@ -595,19 +641,19 @@ class SlackBot(object):
                 continue
 
             status = resp.get('status', 'unknown')
-
+            message_list = []
             if status in ['success', 'failed']:
 
-                message = 'Playbook: {}\n'.format(resp.get('playbook', 'unknown'))
-                message += 'Playbook run ID: {}\n'.format(resp.get('id', 'unknown'))
-                message += 'Playbook run result: {}\n'.format(status)
+                message_list.append(f'Playbook: {resp.get("playbook", "unknown")}')
+                message_list.append(f'Playbook run ID: {resp.get("id", "unknown")}')
+                message_list.append(f'Playbook run result: {status}')
 
             else:
                 continue
 
             self.playbook_queue.remove((playbook_id, channel))
 
-            self._post_message(message, channel)
+            self._post_message('\n'.join(message_list), channel)
 
             return
 
@@ -931,8 +977,12 @@ class SlackBot(object):
                 container = int(container)
 
                 try:
-                    r = requests.get(self.base_url + 'rest/container/{}'.format(container), headers=self.headers,
-                                     auth=self.auth, verify=self.verify, timeout=SLACK_BOT_DEFAULT_TIMEOUT)
+
+                    r = requests.get(f'{SoarRestEndpoint.CONTAINER.full_path(self.base_url)}/{container}',
+                                     headers=self.headers,
+                                     auth=self.auth,
+                                     verify=self.verify,
+                                     timeout=SLACK_BOT_DEFAULT_TIMEOUT)
                 except Exception as e:
                     return False, 'Could not retrieve container data. Could not connect to REST endpoint: {}'.format(e)
 
@@ -991,37 +1041,44 @@ class SlackBot(object):
 
             container_list = list(set(container_list))
 
-            num_conts = len(container_list)
+            num_containers = len(container_list)
 
-            message = 'Found {0} container{1} matching specified tags:\n\n'.format(num_conts, 's' if num_conts != 1 else '')
+            message_list = []
+
+            containers_suffix = 's' if num_containers != 1 else ''
+            message_list.append(f'Found {num_containers} container{containers_suffix} matching specified tags:')
+            message_list.append('')
 
             for container in container_list:
 
                 try:
-
-                    r = requests.get(self.base_url + 'rest/container/{}'.format(container), headers=self.headers,
-                                     auth=self.auth, verify=self.verify, timeout=SLACK_BOT_DEFAULT_TIMEOUT)
+                    query_parameters = {}
+                    query_parameters['page_size'] = 0
+                    r = requests.get(f'{SoarRestEndpoint.CONTAINER.full_path(self.base_url)}/{container}'
+                                     f'{create_query_string(query_parameters)}',
+                                     headers=self.headers,
+                                     auth=self.auth,
+                                     verify=self.verify,
+                                     timeout=SLACK_BOT_DEFAULT_TIMEOUT)
 
                     resp_text = r.text
                     info = json.loads(resp_text)
 
                 except Exception as e:
-                    message += 'Could not retrieve container data for {0}: {1}\n\n'.format(container, e)
+                    logging.exception(f'Could not retrieve container data for container {container}')
+                    message_list.append(f'Could not retrieve container data for container {container}: {e}')
+                    message_list.append('')
 
                 try:
-                    message += 'Name: {}\n'.format(info['name'])
-                    message += 'ID: {}\n'.format(info['id'])
-                    message += 'Label: {}\n'.format(info['label'])
-                    message += 'Tags:'
-
-                    for tag in info['tags']:
-                        message += ' "{}",'.format(tag)
-
-                    message = message[:-1]
-
-                    message += '\n\n'
+                    message_list.append(f'Name: {info["name"]}')
+                    message_list.append(f'ID: {info["id"]}')
+                    message_list.append(f'Label: {info["label"]}')
+                    tags_message = ', '.join([f'"{tag}"' for tag in info['tags']])
+                    message_list.append(f'Tags: {tags_message}')
                 except Exception:
-                    message += 'COULD NOT PARSE CONTAINER INFO\n\n'
+                    message_list.append(f'Could not parse container info for container {container}')
+
+                message_list.append('')
 
             if bad_tags:
                 message += 'Tags with no results: {}'.format(' '.join(bad_tags))
@@ -1051,8 +1108,9 @@ class SlackBot(object):
 
         elif parsed_args.listee == 'containers':
             try:
-                rest_container_endpoint = 'rest/container?page_size=0'
-                r = requests.get(f'{self.base_url}{rest_container_endpoint}',
+                query_parameters = {}
+                query_parameters['page_size'] = 0
+                r = requests.get(f'{SoarRestEndpoint.CONTAINER.full_path(self.base_url)}{create_query_string(query_parameters)}',
                                  headers=self.headers,
                                  auth=self.auth,
                                  verify=self.verify,
