@@ -13,7 +13,7 @@
     ],
     "package_name": "phantom_slack_bot",
     "type": "information",
-    "license": "Copyright (c) 2022 Splunk Inc.",
+    "license": "Copyright (c) 2023 Splunk Inc.",
     "main_module": "slack_bot_connector.py",
     "app_version": "1.0.0",
     "utctime_updated": "2022-02-04T18:14:51.000000Z",
@@ -24,7 +24,7 @@
     "python_version": "3",
     "fips_compliant": true,
     "latest_tested_versions": [
-        "Cloud API, December 7, 2022"
+        "Cloud API, January 6, 2023"
     ],
     "logo": "logo_slack.svg",
     "logo_dark": "logo_slack_dark.svg",

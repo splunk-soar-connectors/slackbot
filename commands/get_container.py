@@ -1,4 +1,4 @@
-# File: __init__.py
+# File: get_container.py
 #
 # Copyright (c) 2023 Splunk Inc.
 #
