@@ -166,7 +166,6 @@ class SlackBot(object):
         self.base_url = base_url
         self.phantom_url = base_url
         self.verification_token = None
-        self._init_containers()
         self._generate_dicts()
 
     def _soar_get(self, endpoint: SoarRestEndpoint, query_parameters: dict, path_postfix=''):
@@ -189,12 +188,6 @@ class SlackBot(object):
             verify=self.verify,
             timeout=SLACK_BOT_DEFAULT_TIMEOUT,
         )
-
-    def _init_containers(self):
-
-        self.action_queue = []
-        self.app_run_queue = []
-        self.playbook_queue = []
 
     def _generate_dicts(self):
         """
@@ -358,147 +351,6 @@ class SlackBot(object):
                 container_dict[tag].append(container_id)
 
         return container_dict
-
-    def _add_to_app_queue(self, action_run_id, channel):
-
-        try:
-
-            r = requests.get(SoarRestEndpoint.APP_RUNS.full_path(self.base_url).format(action_run_id),
-                             headers=self.headers,
-                             auth=self.auth,
-                             verify=self.verify,
-                             timeout=SLACK_BOT_DEFAULT_TIMEOUT)
-
-            resp = r.json()
-
-        except Exception as e:
-            return 'Failed to run action: Could not connect to Phantom REST endpoint: {}'.format(e)
-
-        for app_run in resp['data']:
-            self.app_run_queue.append((app_run['id'], channel))
-
-    def _check_action_queue(self):
-
-        for action_id, channel in self.action_queue:
-
-            try:
-
-                r = requests.get(f'{SoarRestEndpoint.ACTION_RUN.full_path(self.base_url)}/{action_id}',
-                                 headers=self.headers,
-                                 auth=self.auth,
-                                 verify=self.verify,
-                                 timeout=SLACK_BOT_DEFAULT_TIMEOUT)
-
-                resp = r.json()
-
-            except Exception:
-                continue
-
-            if resp.get('status', '') in ['success', 'failed']:
-
-                self._add_to_app_queue(resp['id'], channel)
-
-                self.action_queue.remove((action_id, channel))
-
-    def _check_app_run_queue(self):
-
-        for app_run_id, channel in self.app_run_queue:
-
-            try:
-
-                r = requests.get(f'{SoarRestEndpoint.APP_RUN.full_path(self.base_url)}/{app_run_id}',
-                                 headers=self.headers,
-                                 auth=self.auth,
-                                 verify=self.verify,
-                                 timeout=SLACK_BOT_DEFAULT_TIMEOUT)
-
-                resp = r.json()
-
-            except Exception:
-                continue
-
-            status = resp.get('status', 'unknown')
-            message_list = []
-            if status in ['success', 'failed']:
-
-                asset = self.asset_dict.get(resp.get('asset'))
-
-                asset_name = 'N/A' if asset is None else asset.name
-
-                message_list.append(f'Action:  {resp.get("action")}')
-                message_list.append(f'Asset:  {asset_name}')
-                message_list.append(f'Status:  {status}')
-
-                result_data = resp.get('result_data', [])
-
-                if len(result_data) > 0:
-
-                    result_data = result_data[0]
-
-                    message_list.append(f'Message: {result_data.get("message", status)}')
-
-                    parameters = result_data.get('parameter', [])
-
-                    if len(parameters) > 1:
-
-                        message_list.append('Parameters:')
-
-                        for key, value in parameters.items():
-
-                            if key == 'context':
-                                continue
-
-                            message_list.append(f'  {key}: {value}')
-
-                    summary = result_data.get('summary', '')
-
-                    if summary:
-
-                        message_list.append('Summary:')
-
-                        for key, value in summary.items():
-                            message_list.append(f'  {key}: {value}')
-
-                else:
-
-                    message_list.append(f'Message: {resp.get("message", status)}')
-
-            self.app_run_queue.remove((app_run_id, channel))
-
-            self._post_message('\n'.join(message_list), channel)
-
-    def _check_playbook_queue(self):
-
-        for playbook_id, channel in self.playbook_queue:
-
-            try:
-                r = requests.get(f'{SoarRestEndpoint.PLAYBOOK_RUN.full_path(self.base_url)}/{playbook_id}',
-                                 headers=self.headers,
-                                 auth=self.auth,
-                                 verify=self.verify,
-                                 timeout=SLACK_BOT_DEFAULT_TIMEOUT)
-
-                resp = r.json()
-
-            except Exception:
-                continue
-
-            status = resp.get('status', 'unknown')
-            message_list = []
-            if status in ['success', 'failed']:
-
-                message_list.append(f'Playbook: {resp.get("playbook", "unknown")}')
-                message_list.append(f'Playbook run ID: {resp.get("id", "unknown")}')
-                message_list.append(f'Playbook run result: {status}')
-
-            else:
-                continue
-
-            self.playbook_queue.remove((playbook_id, channel))
-
-            self._post_message('\n'.join(message_list), channel)
-
-            return
 
     def _sanitize(self, string):
         """ Slack quotes use those fancy UTF-8 ones that flip based on what side they are on

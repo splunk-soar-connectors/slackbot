@@ -100,8 +100,6 @@ class RunPlaybookCommand(Command):
         if not run_id:
             return 'Failed to run playbook: Could not get playbook run ID'
 
-        self.slack_bot.playbook_queue.append((run_id, channel))
-
         container_id = request_body.get('container_id', '')
         playbook_id = request_body.get('playbook_id', '')
 

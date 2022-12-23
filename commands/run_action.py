@@ -201,8 +201,6 @@ class RunActionCommand(Command):
         if not run_id:
             return 'Failed to run action: Could not get action run ID'
 
-        self.slack_bot.action_queue.append((run_id, channel))
-
         action_url = f'{self.slack_bot.phantom_url}action/{run_id}'
 
         self.slack_bot._post_message(f'Action run URL: {action_url}', channel, code_block=False)
