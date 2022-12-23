@@ -346,7 +346,7 @@ class SlackBotConnector(phantom.BaseConnector):
 
     def _get_phantom_base_url_slack(self, action_result):
         base_url = self.get_phantom_base_url()
-        rest_url = SoarRestEndpoint.SYSTEM_INFO.full_path(base_url)
+        rest_url = SoarRestEndpoint.SYSTEM_INFO.url(base_url)
 
         ret_val, resp_json = self._make_rest_call(action_result, rest_url, False)
 

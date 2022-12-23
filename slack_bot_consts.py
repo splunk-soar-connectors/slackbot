@@ -29,13 +29,15 @@ class SoarRestEndpoint(str, Enum):
     PLAYBOOK_RUN = 'playbook_run'
     SYSTEM_INFO = 'system_info'
 
-    def __new__(cls, endpoint):
-        return f'rest/{endpoint}'
+    @property
+    def path(self):
+        """ Return the full path for the endpoint. """
+        return f'rest/{self.value}'
 
-    def full_path(self, base_url):
-        """ Create a full path including the specified base URL. """
+    def url(self, base_url):
+        """ Create a full URL including the path and specified base URL. """
         base_url = base_url.rstrip('/')
-        return f'{base_url}/{self.value}'
+        return f'{base_url}/{self.path}'
 
 
 # Action IDs

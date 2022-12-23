@@ -76,7 +76,7 @@ class RunActionCommand(Command):
         params = parsed_args.parameters
         container = parsed_args.container
 
-        action_list = self.slack_bot.get_action_list_from_name(action)
+        action_list = self.slack_bot.get_action_list(name=action)
         if not action_list:
             return False, f'Could not find action, {action}'
 

@@ -49,7 +49,7 @@ For more information on a specific command, try @<bot_username> <command> --help
 """
 
 
-def create_query_string():
+def create_query_string(query_parameters):
     """ Create a query URL string from a query parameters dictionary. """
     if not query_parameters:
         return ''
@@ -159,7 +159,7 @@ class SlackBot(object):
         self.permit_list = permit_list
         self.permitted_users = permitted_users
         self.headers = {} if not auth_token else {'ph-auth-token': auth_token}
-        self.cmd_start = '<@{}>'.format(bot_id)
+        self.cmd_start = f'<@{bot_id}>'
         self.auth = auth_basic
         self.verify = verify
         base_url += '/' if not base_url.endswith('/') else ''
@@ -168,26 +168,28 @@ class SlackBot(object):
         self.verification_token = None
         self._generate_dicts()
 
-    def _soar_get(self, endpoint: SoarRestEndpoint, query_parameters: dict, path_postfix=''):
+    def _soar_get(self, endpoint: SoarRestEndpoint, query_parameters: dict = None, path_postfix: str = ''):
         """ Make a SOAR GET request. """
-        return requests.get(
-            f'{endpoint.full_path(self.base_url)}{path_postfix}{create_query_string(query_parameters)}',
-            headers=self.headers,
-            auth=self.auth,
-            verify=self.verify,
-            timeout=SLACK_BOT_DEFAULT_TIMEOUT,
-        )
+        url = f'{endpoint.url(self.base_url)}{path_postfix}{create_query_string(query_parameters)}'
 
-    def _soar_post(self, endpoint: SoarRestEndpoint, body: dict):
+        logging.debug('Sending GET request to SOAR URL: %s', url)
+        return requests.get(url,
+                            headers=self.headers,
+                            auth=self.auth,
+                            verify=self.verify,
+                            timeout=SLACK_BOT_DEFAULT_TIMEOUT)
+
+    def _soar_post(self, endpoint: SoarRestEndpoint, body: dict = None):
         """ Make a SOAR POST request. """
-        return requests.post(
-            endpoint.full_path(self.base_url),
-            json=body,
-            headers=self.headers,
-            auth=self.auth,
-            verify=self.verify,
-            timeout=SLACK_BOT_DEFAULT_TIMEOUT,
-        )
+        url = endpoint.url(self.base_url),
+
+        logging.debug('Sending POST request to SOAR URL: %s', url)
+        return requests.post(url,
+                             json=body,
+                             headers=self.headers,
+                             auth=self.auth,
+                             verify=self.verify,
+                             timeout=SLACK_BOT_DEFAULT_TIMEOUT)
 
     def _generate_dicts(self):
         """
@@ -196,7 +198,6 @@ class SlackBot(object):
         """
         self.app_dict = {}
         self.asset_dict = {}
-        self.action_dict = {}
         self.app_to_asset_dict = {}
 
         self._create_app_dict()
@@ -209,11 +210,7 @@ class SlackBot(object):
             query_parameters = {}
             query_parameters['page_size'] = 0
             query_parameters['pretty'] = True
-            r = requests.get(f'{SoarRestEndpoint.APP.full_path(self.base_url)}{create_query_string(query_parameters)}',
-                             headers=self.headers,
-                             auth=self.auth,
-                             verify=self.verify,
-                             timeout=SLACK_BOT_DEFAULT_TIMEOUT)
+            r = self._soar_get(SoarRestEndpoint.APP, query_parameters=query_parameters)
         except Exception:
             return
 
@@ -240,11 +237,7 @@ class SlackBot(object):
         """
 
         try:
-            r = requests.get(SoarRestEndpoint.BUILD_ACTION.full_path(self.base_url),
-                             headers=self.headers,
-                             auth=self.auth,
-                             verify=self.verify,
-                             timeout=SLACK_BOT_DEFAULT_TIMEOUT)
+            r = self._soar_get(SoarRestEndpoint.BUILD_ACTION)
         except Exception:
             return
 
@@ -281,22 +274,19 @@ class SlackBot(object):
             self.asset_dict[asset_id] = asset_object
             self.asset_dict[asset_name] = asset_object
 
-    def get_action_list_from_name(self, action_name):
-        """ Return a list of available action objects with the given action_name. """
+    def get_action_list(self, name=None):
+        """ Return a list of available action objects. """
         try:
             query_parameters = {}
             query_parameters['page_size'] = 0
-            query_parameters['_filter_action'] = f'"{action_name}"'
-            action_request = requests.get(
-                f'{SoarRestEndpoint.APP_ACTION.full_path(self.base_url)}{create_query_string(query_parameters)}',
-                headers=self.headers,
-                auth=self.auth,
-                verify=self.verify,
-                timeout=SLACK_BOT_DEFAULT_TIMEOUT
-            )
+
+            if name is not None:
+                query_parameters['_filter_action'] = f'"{name}"'
+
+            action_request = self._soar_get(SoarRestEndpoint.APP_ACTION, query_parameters=query_parameters)
             action_request.raise_for_status()
         except Exception:
-            logging.exception('Failed to query for action name "%s"', action_name)
+            logging.exception('Failed to query for actions.')
             return []
 
         action_list = []
@@ -321,11 +311,7 @@ class SlackBot(object):
         try:
             query_parameters = {}
             query_parameters['page_size'] = 0
-            r = requests.get(f'{SoarRestEndpoint.CONTAINER.full_path(self.base_url)}{create_query_string(query_parameters)}',
-                             headers=self.headers,
-                             auth=self.auth,
-                             verify=self.verify,
-                             timeout=SLACK_BOT_DEFAULT_TIMEOUT)
+            r = self._soar_get(SoarRestEndpoint.CONTAINER, query_parameters=query_parameters)
         except Exception:
             return None
 

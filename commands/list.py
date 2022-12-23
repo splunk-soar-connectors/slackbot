@@ -43,9 +43,10 @@ class ListCommand(Command):
     HELP_MESSAGE = HELP_MESSAGE
 
     def _create_parser(self):
-        self.list_parser = ArgumentParser(exit_on_error=False, add_help=False)
-        self.list_parser.add_argument('--help', dest='aid', action='store_true')
-        self.list_parser.add_argument('listee', choices=['actions', 'containers'])
+        list_parser = ArgumentParser(exit_on_error=False, add_help=False)
+        list_parser.add_argument('--help', dest='aid', action='store_true')
+        list_parser.add_argument('listee', choices=['actions', 'containers'])
+        return list_parser
 
     def parse(self, command):
         """ Parse the specified command string. """
@@ -58,8 +59,7 @@ class ListCommand(Command):
 
         message_list = []
         if parsed_args.listee == 'actions':
-            sorted_actions = list(self.slack_bot.action_dict.keys())
-            sorted_actions.sort()
+            sorted_actions = sorted(action.name for action in self.slack_bot.get_action_list())
 
             for action in sorted_actions:
                 message_list.append(str(action))
