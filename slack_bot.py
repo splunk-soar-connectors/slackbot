@@ -17,7 +17,6 @@ import os
 import shlex
 import sys
 import tempfile
-from argparse import ArgumentParser
 from pathlib import Path
 
 import encryption_helper
@@ -27,6 +26,10 @@ import urllib3
 from slack_bolt import App as slack_app
 from slack_bolt.adapter.socket_mode import SocketModeHandler
 
+from commands.get_container import GetContainerCommand
+from commands.list import ListCommand
+from commands.run_action import RunActionCommand
+from commands.run_playbook import RunPlaybookCommand
 from slack_bot_consts import *
 
 urllib3.disable_warnings()
@@ -45,88 +48,8 @@ usage:
 For more information on a specific command, try @<bot_username> <command> --help
 """
 
-SLACK_BOT_ACTION_HELP_MESSAGE = """
-usage:
 
-act ACTION_NAME [--container CONTAINER_ID] [--asset ASSET] [--name NAME]
-    [--TYPE TYPE] [--parameters PARAMETER:VALUE [PARAMETER:VALUE]*]
-
-required arguments:
-  ACTION_NAME               Name of the action to run
-  --container CONTAINER_ID  ID of the container to run the action on
-
-optional arguments:
-  --help                    show this help message or show information about the specified action
-  --name NAME               Set a name for the action (defaults to 'Slack generated action')
-  --type TYPE               Set the type of the action (defaults to 'phantombot')
-  --asset ASSET             Name or ID of the asset to run the action on
-                            If no asset is specified, the given action will run on all possible assets
-  --parameters PARAMETER:VALUE [PARAMETER:VALUE]*]
-                            List of parameter/value pairs in the format
-                            param1:value1 param2:value2...
-
-For example:
-    @<bot_username> act "geolocate ip" --parameters ip:1.1.1.1 --container 1291
-"""
-
-SLACK_BOT_PLAYBOOK_HELP_MESSAGE = """
-usage:
-
-run_playbook <--repo REPO PLAYBOOK_NAME | PLAYBOOK_ID> CONTAINER_ID
-
-required arguments:
-  PLAYBOOK_NAME      Name of the playbook to run (Required if repo argument is included)
-  PLAYBOOK_ID        ID of the playbook to run (Required if no repo argument is included)
-  CONTAINER_ID      ID of container to run playbook on
-
-optional arguments:
-  --help        show this help message and exit
-  --repo REPO   Name of the repo the playbook is in (required if playbook
-                argument is a name, and not an ID)
-
-For example:
-    @<bot_username> run_playbook --repo community invesigate 25
-  or
-    @<bot_username> run_playbook 1 25
-"""
-
-SLACK_BOT_CONTAINER_HELP_MESSAGE = """
-usage:
-
-get_container <--container CONTAINER_ID | --tags TAG [TAG]*>
-
-arguments:
-  --help                    show this help message and exit
-  --container CONTAINER     ID of the container to retrieve
-  --tags TAG [TAG]*         List of tags of containers to retrieve
-
-Only one of --container or --tags flags can be included at once
-
-For example:
-    @<bot_username> get_container --container 16
-  or
-    @<bot_username> get_container --tags tag1 tag2 tag3
-"""
-
-SLACK_BOT_LIST_HELP_MESSAGE = """
-usage:
-
-list <actions|containers|playbooks>
-
-arguments:
-  --help        show this help message and exit
-  object        name of object to list, can be 'actions', 'containers', or 'playbooks'
-
-For example:
-    @<bot_username> list containers
-  or
-    @<bot_username> list actions
-  or
-    @<bot_username> list playbooks
-"""
-
-
-def create_query_string(query_parameters):
+def create_query_string():
     """ Create a query URL string from a query parameters dictionary. """
     if not query_parameters:
         return ''
@@ -245,7 +168,27 @@ class SlackBot(object):
         self.verification_token = None
         self._init_containers()
         self._generate_dicts()
-        self._init_parsers()
+
+    def _soar_get(self, endpoint: SoarRestEndpoint, query_parameters: dict, path_postfix=''):
+        """ Make a SOAR GET request. """
+        return requests.get(
+            f'{endpoint.full_path(self.base_url)}{path_postfix}{create_query_string(query_parameters)}',
+            headers=self.headers,
+            auth=self.auth,
+            verify=self.verify,
+            timeout=SLACK_BOT_DEFAULT_TIMEOUT,
+        )
+
+    def _soar_post(self, endpoint: SoarRestEndpoint, body: dict):
+        """ Make a SOAR POST request. """
+        return requests.post(
+            endpoint.full_path(self.base_url),
+            json=body,
+            headers=self.headers,
+            auth=self.auth,
+            verify=self.verify,
+            timeout=SLACK_BOT_DEFAULT_TIMEOUT,
+        )
 
     def _init_containers(self):
 
@@ -265,32 +208,6 @@ class SlackBot(object):
 
         self._create_app_dict()
         self._create_asset_dict()
-        self._create_action_dict()
-
-    def _init_parsers(self):
-
-        self.action_parser = ArgumentParser(add_help=False, exit_on_error=False)
-        self.action_parser.add_argument('action')
-        self.action_parser.add_argument('--help', dest='aid', action='store_true')
-        self.action_parser.add_argument('--container')
-        self.action_parser.add_argument('--name', default='Slack generated action')
-        self.action_parser.add_argument('--type', dest='typ', default='phantombot')
-        self.action_parser.add_argument('--asset')
-        self.action_parser.add_argument('--parameters', nargs='+')
-
-        self.playbook_parser = ArgumentParser(exit_on_error=False)
-        self.playbook_parser.add_argument('--repo', dest='repo',
-                                          help='Name of the repo the playbook is in (required if playbook argument is a name, and not an ID)')
-        self.playbook_parser.add_argument('playbook', help='Name or ID of the playbook to run')
-        self.playbook_parser.add_argument('container', help='ID of container to run playbook on')
-
-        self.container_parser = ArgumentParser(exit_on_error=False)
-        self.container_parser.add_argument('--container')
-        self.container_parser.add_argument('--tags', nargs='+')
-
-        self.list_parser = ArgumentParser(exit_on_error=False, add_help=False)
-        self.list_parser.add_argument('--help', dest='aid', action='store_true')
-        self.list_parser.add_argument('listee', choices=['actions', 'containers'])
 
     def _create_app_dict(self):
         """ Maps app IDs and names to app objects """
@@ -371,42 +288,39 @@ class SlackBot(object):
             self.asset_dict[asset_id] = asset_object
             self.asset_dict[asset_name] = asset_object
 
-    def _create_action_dict(self):
-        """ Maps actions names to action objects """
-
+    def get_action_list_from_name(self, action_name):
+        """ Return a list of available action objects with the given action_name. """
         try:
             query_parameters = {}
             query_parameters['page_size'] = 0
-            r = requests.get(f'{SoarRestEndpoint.APP_ACTION.full_path(self.base_url)}{create_query_string(query_parameters)}',
-                             headers=self.headers,
-                             auth=self.auth,
-                             verify=self.verify,
-                             timeout=SLACK_BOT_DEFAULT_TIMEOUT)
+            query_parameters['_filter_action'] = f'"{action_name}"'
+            action_request = requests.get(
+                f'{SoarRestEndpoint.APP_ACTION.full_path(self.base_url)}{create_query_string(query_parameters)}',
+                headers=self.headers,
+                auth=self.auth,
+                verify=self.verify,
+                timeout=SLACK_BOT_DEFAULT_TIMEOUT
+            )
+            action_request.raise_for_status()
         except Exception:
-            return
+            logging.exception('Failed to query for action name "%s"', action_name)
+            return []
 
-        if r.status_code != 200:
-            return
-
-        for action in r.json().get('data', []):
-
-            action_name = action.get('action', '')
+        action_list = []
+        for action in action_request.json().get('data', []):
+            action_name = action.get('action')
             action_id = action.get('id')
             action_app = action.get('app')
 
             if not (action_name and action_id and action_app):
                 continue
 
-            if action_name not in self.action_dict:
-                self.action_dict[action_name] = []
-
             action_object = Action(action_name, action_id, action_app)
-
             action_object.add_parameters(action['parameters'])
-
             action_object.assets = self.app_to_asset_dict.get(action_app, [])
+            action_list.append(action_object)
 
-            self.action_dict[action_name] += [action_object]
+        return action_list
 
     def _create_container_dict(self):
         """ Maps container IDs to container objects """
@@ -444,78 +358,6 @@ class SlackBot(object):
                 container_dict[tag].append(container_id)
 
         return container_dict
-
-    def _action_run_request(self, body, channel):
-
-        try:
-
-            r = requests.post(SoarRestEndpoint.ACTION_RUN.full_path(self.base_url),
-                              json=body,
-                              headers=self.headers,
-                              auth=self.auth,
-                              verify=self.verify,
-                              timeout=SLACK_BOT_DEFAULT_TIMEOUT)
-
-            resp = r.json()
-
-        except Exception as e:
-            return 'Failed to run action: Could not connect to Phantom REST endpoint: {}'.format(e)
-
-        if resp.get('failed'):
-            error = resp.get('message', 'unknown error')
-
-            if '"Container.owner" must be a "PhUser" instance' in error:
-                return 'Failed to run action: A container must have an owner to run an action on it.\n\n'
-
-            return 'Failed to run action: {}\n\n'.format(error)
-
-        run_id = resp.get('action_run_id')
-
-        if not run_id:
-            return 'Failed to run action: Could not get action run ID'
-
-        self.action_queue.append((run_id, channel))
-
-        action_url = '{0}action/{1}'.format(self.phantom_url, run_id)
-
-        self._post_message('Action run URL: {}'.format(action_url), channel, code_block=False)
-
-        return 'Message: {0}\nAction run ID: {1}'.format(resp['message'], run_id)
-
-    def _playbook_request(self, body, channel):
-
-        try:
-
-            r = requests.post(SoarRestEndpoint.PLAYBOOK_RUN.full_path(self.base_url),
-                              json=body,
-                              headers=self.headers,
-                              auth=self.auth,
-                              verify=self.verify, timeout=SLACK_BOT_DEFAULT_TIMEOUT)
-
-            resp = r.json()
-
-        except Exception as e:
-            return 'Failed to run playbook: Could not connect to Phantom REST endpoint: {}'.format(e)
-
-        if resp.get('failed', False):
-            return 'Failed to run playbook: {}'.format(resp.get('message', 'unknown error'))
-
-        run_id = resp.get('playbook_run_id')
-
-        if not run_id:
-            return 'Failed to run playbook: Could not get playbook run ID'
-
-        self.playbook_queue.append((run_id, channel))
-
-        container_id = body.get('container_id', '')
-        playbook_id = body.get('playbook_id', '')
-
-        action_url = '{0}mission/{1}'.format(self.phantom_url, container_id)
-
-        self._post_message('Container URL: {}'.format(action_url), channel, code_block=False)
-
-        return 'Playbook: {0}\nPlaybook run ID: {1}\nPlaybook queueing result: Playbook run successfully queued'.format(
-            playbook_id, resp['playbook_run_id'])
 
     def _add_to_app_queue(self, action_run_id, channel):
 
@@ -725,127 +567,6 @@ class SlackBot(object):
 
             self._post_message(message[last_newline + 1:], channel, code_block=code_block)
 
-    def _parse_action(self, command):
-
-        try:
-            parsed_args = self.action_parser.parse_args(command)
-        except:  # We also want to catch SystemError exceptions
-            return False, SLACK_BOT_ACTION_HELP_MESSAGE
-
-        self._generate_dicts()
-
-        request_body = {}
-        request_body['targets'] = []
-
-        asset = parsed_args.asset
-        action = parsed_args.action
-        params = parsed_args.parameters
-        container = parsed_args.container
-
-        if action not in self.action_dict:
-            return False, 'Could not find action, {}'.format(action)
-
-        action_list = self.action_dict[action]
-
-        if asset:
-
-            message, result_asset, result_action = self._parse_asset(asset, action, action_list)
-
-            if not (result_asset and result_action):
-                return False, message
-
-            asset_object = result_asset
-            action_object = result_action
-
-        if parsed_args.aid or not container:
-
-            if asset:
-                total_message = 'Info on {0} action on {1} asset:\n'.format(action, asset)
-            else:
-                total_message = 'List of available "{}" actions:\n'.format(action)
-
-            for action_object in action_list:
-
-                if not action_object.assets:
-                    continue
-
-                if asset and asset_object.asset_id not in action_object.assets:
-                    continue
-
-                try:
-
-                    message = 'ID: {}\n'.format(action_object.action_id)
-                    message += 'App: {}\n'.format(self.app_dict[action_object.app].name)
-
-                    message += 'Assets: '
-
-                    for ass in action_object.assets:
-
-                        message += '{}, '.format(self.asset_dict[ass].name)
-
-                    message = message[:-2]
-                    message += '\nParameters:\n'
-
-                    for param in list(action_object.parameters.values()):
-
-                        message += '  {}:\n'.format(param.name)
-                        message += '    Data Type: {}\n'.format(param.data_type)
-                        message += '    Required: {}\n'.format(param.required)
-
-                    total_message += '\n{}'.format(message)
-
-                except Exception:
-                    continue
-
-            if not container:
-                total_message += ('\nThis help message was printed because no container ID was provided.'
-                                  '\nPlease specify a container if you would like to run this action.')
-
-            return False, total_message
-
-        request_body['action'] = action
-        request_body['type'] = parsed_args.typ
-        request_body['name'] = parsed_args.name
-        request_body['container_id'] = container
-
-        # If an asset was passed as an argument, we only want to run one action
-        if asset:
-
-            target = {}
-            target['app_id'] = asset_object.apps[0]
-            target['assets'] = [asset_object.asset_id]
-
-            ret_val, message = self._parse_params(params, action_object.parameters, target)
-
-            if not ret_val:
-                return False, message
-
-            request_body['targets'].append(target)
-
-        # If no asset argument was passed, we need to find all actions that have the name given
-        else:
-
-            for action_object in action_list:
-
-                if not action_object.assets:
-                    continue
-
-                target = {}
-                target['app_id'] = action_object.app
-                target['assets'] = action_object.assets
-
-                ret_val, message = self._parse_params(params, action_object.parameters, target)
-
-                if not ret_val:
-                    return False, message
-
-                request_body['targets'].append(target)
-
-            if not request_body['targets']:
-                return False, 'There are no valid assets to run this action on.'
-
-        return True, request_body
-
     def _parse_asset(self, asset, action, action_list):
 
         found1 = True
@@ -927,210 +648,6 @@ class SlackBot(object):
                         return False, 'Missing required parameter: {}'.format(key)
 
         return True, None
-
-    def _parse_playbook(self, command):
-
-        try:
-            args = self.playbook_parser.parse_args(command)
-
-        except:  # We also want to catch SystemError exceptions
-            return False, SLACK_BOT_PLAYBOOK_HELP_MESSAGE
-
-        request_body = {}
-        request_body['run'] = True
-        request_body['container_id'] = args.container
-
-        # Check to see if its a numeric ID
-        try:
-            playbook = int(args.playbook)
-
-        except Exception:
-            if not args.repo:
-                return False, 'repo argument is required when supplying playbook name instead of playbook ID'
-
-            playbook = '{0}/{1}'.format(args.repo, args.playbook)
-
-        request_body['playbook_id'] = playbook
-
-        return True, request_body
-
-    def _parse_container(self, command):
-
-        try:
-            parsed_args = self.container_parser.parse_args(command)
-        except:  # We also want to catch SystemError exceptions
-            return False, SLACK_BOT_CONTAINER_HELP_MESSAGE
-
-        container = parsed_args.container
-        tags = parsed_args.tags
-
-        # Perform on XOR to make sure only one of the arguments is set
-        if (container is not None) == (tags is not None):
-            return False, SLACK_BOT_CONTAINER_HELP_MESSAGE
-
-        def create_tags_message(tags):
-            return ', '.join(f'"{tag}"' for tag in tags)
-
-        if container:
-            container_info = {}
-            try:
-                container = int(container)
-                try:
-                    r = requests.get(f'{SoarRestEndpoint.CONTAINER.full_path(self.base_url)}/{container}',
-                                     headers=self.headers,
-                                     auth=self.auth,
-                                     verify=self.verify,
-                                     timeout=SLACK_BOT_DEFAULT_TIMEOUT)
-                except Exception as e:
-                    return False, 'Could not retrieve container data. Could not connect to REST endpoint: {}'.format(e)
-
-                container_info = r.json()
-
-            except Exception:
-                try:
-                    return False, 'Could not parse container ID: {}'.format(container)
-                except Exception:
-                    return False, 'Could not parse given container ID'
-
-            message_list = []
-
-            for key, value in container_info.items():
-
-                if key == 'tags':
-
-                    message_list += 'Tags: '
-
-                    for tag in value:
-                        message += ' "{}",'.format(tag)
-
-                    message = message[:-1]
-
-                    message += '\n'
-
-                    continue
-
-                try:
-                    message += '{0}: {1}\n'.format(key, value)
-                except Exception:
-                    message += '{0}: {1}\n'.format(key, 'Value could not be parsed')
-
-            return True, message
-
-        if tags:
-            container_dict = self._create_container_dict()
-
-            if container_dict is None:
-                return False, 'Could not get containers, error contacting the REST endpoint'
-
-            if not container_dict:
-                return False, 'Found no containers on the Phantom instance'
-
-            bad_tags = []
-            container_list = []
-
-            for tag in tags:
-
-                if tag not in container_dict:
-                    bad_tags.append(tag)
-                    continue
-
-                container_list += container_dict[tag]
-
-            container_list = list(set(container_list))
-
-            num_containers = len(container_list)
-
-            message_list = []
-
-            containers_suffix = 's' if num_containers != 1 else ''
-            message_list.append(f'Found {num_containers} container{containers_suffix} matching specified tags:')
-            message_list.append('')
-
-            for container in container_list:
-
-                try:
-                    query_parameters = {}
-                    query_parameters['page_size'] = 0
-                    r = requests.get(f'{SoarRestEndpoint.CONTAINER.full_path(self.base_url)}/{container}'
-                                     f'{create_query_string(query_parameters)}',
-                                     headers=self.headers,
-                                     auth=self.auth,
-                                     verify=self.verify,
-                                     timeout=SLACK_BOT_DEFAULT_TIMEOUT)
-
-                    resp_text = r.text
-                    info = json.loads(resp_text)
-
-                except Exception as e:
-                    logging.exception(f'Could not retrieve container data for container {container}')
-                    message_list.append(f'Could not retrieve container data for container {container}: {e}')
-                    message_list.append('')
-
-                try:
-                    message_list.append(f'Name: {info["name"]}')
-                    message_list.append(f'ID: {info["id"]}')
-                    message_list.append(f'Label: {info["label"]}')
-                    message_list.append(f'Tags: {create_tags_message(info["tags"])}')
-                except Exception:
-                    message_list.append(f'Could not parse container info for container {container}')
-
-                message_list.append('')
-
-            if bad_tags:
-                message_list.append(f'Tags with no results: {create_tags_message(bad_tags)}')
-
-            return True, '\n'.join(message_list)
-
-    def _parse_list(self, command):
-
-        try:
-            parsed_args = self.list_parser.parse_args(command)
-        except:  # We also want to catch SystemError exceptions
-            return False, SLACK_BOT_LIST_HELP_MESSAGE
-
-        self._generate_dicts()
-
-        message_list = []
-
-        if parsed_args.listee == 'actions':
-            sorted_actions = list(self.action_dict.keys())
-            sorted_actions.sort()
-
-            for action in sorted_actions:
-                message_list.append(str(action))
-
-            message_list.append('')
-            message_list.append('For more info on an action, try "act <action_name>"')
-
-        elif parsed_args.listee == 'containers':
-            try:
-                query_parameters = {}
-                query_parameters['page_size'] = 0
-                r = requests.get(f'{SoarRestEndpoint.CONTAINER.full_path(self.base_url)}{create_query_string(query_parameters)}',
-                                 headers=self.headers,
-                                 auth=self.auth,
-                                 verify=self.verify,
-                                 timeout=SLACK_BOT_DEFAULT_TIMEOUT)
-            except Exception as e:
-                logging.exception('Failed to retrieve container data.')
-                return False, 'Could not retrieve container data. Could not connect to REST endpoint: {}'.format(e)
-
-            try:
-                sorted_containers = sorted(r.json()['data'], key=lambda container: container['id'])
-            except Exception as e:
-                logging.exception('Failed to parse retrieved container data.')
-                return False, 'Could not parse container data: {}'.format(e)
-
-            for container in sorted_containers:
-                try:
-                    message_list.append(f'ID: {container["id"]}'.ljust(10) + f'Name: {container["name"]}')
-                except Exception:
-                    message_list.append('Container info could not be parsed')
-
-            message_list.append('')
-            message_list.append('For more information on a container, try "get_container <container_id>"')
-
-        return True, '\n'.join(message_list)
 
     def _from_on_poll(self):
         """
@@ -1269,30 +786,26 @@ class SlackBot(object):
 
         if cmd_type == 'act':
             logging.info('**permit_bot_act: %s', self.permit_act)
-            status, result = self._parse_action(args[1:])
-            if status:
-                message = self._action_run_request(result, channel)
-            else:
-                message = result
-
+            command = RunActionCommand(self)
         elif cmd_type == 'run_playbook':
             logging.info('**permit_bot_playbook: %s', self.permit_playbook)
-            status, result = self._parse_playbook(args[1:])
-            if status:
-                message = self._playbook_request(result, channel)
-            else:
-                message = result
-
+            command = RunPlaybookCommand(self)
         elif cmd_type == 'get_container':
             logging.info('**permit_bot_container: %s', self.permit_container)
-            status, message = self._parse_container(args[1:])
-
+            command = GetContainerCommand(self)
         elif cmd_type == 'list':
             logging.info('**permit_bot_list: %s', self.permit_list)
-            status, message = self._parse_list(args[1:])
-
+            command = ListCommand(self)
         else:
+            command = None
             message = SLACK_BOT_HELP_MESSAGE
+
+        if command:
+            status, result = command.parse(args[1:])
+            if status:
+                message = command.execute(result, channel)
+            else:
+                message = result
 
         self._post_message(message, channel)
 
