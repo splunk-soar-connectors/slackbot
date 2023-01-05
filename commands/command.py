@@ -19,9 +19,15 @@ import slack_bot_consts as constants
 class Command():
     """ Slack Bot command base class. """
 
+    COMMAND_NAME: str = None
+    COMMAND_DESCRIPTION: str = None
+
     def __init__(self, slack_bot, channel):
         self.slack_bot = slack_bot
         self.channel = channel
+
+        if self.COMMAND_NAME is None:
+            raise ValueError(f'COMMAND_NAME must be specified for the command {self.__class__.__name__}.')
 
     def configure_parser(self, parser) -> None:
         """ Configure the parser for this command. """

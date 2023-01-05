@@ -582,6 +582,7 @@ class SlackBot(object):
 
         for slack_bot_command in AVAILABLE_COMMANDS:
             subparser = subparsers.add_parser(slack_bot_command.COMMAND_NAME,
+                                              description=slack_bot_command.COMMAND_DESCRIPTION,
                                               argument_default=argparse.SUPPRESS,  # Avoid printing None if no default
                                               formatter_class=argparse.ArgumentDefaultsHelpFormatter)
             command_instance = slack_bot_command(self, channel)
