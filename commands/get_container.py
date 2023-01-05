@@ -14,59 +14,46 @@
 # and limitations under the License.
 
 import logging
-from argparse import ArgumentParser
 
 import slack_bot_consts as constants
 from commands.command import Command
-
-HELP_MESSAGE = """
-usage:
-
-get_container <--container CONTAINER_ID | --tags TAG [TAG]*>
-
-arguments:
-  --help                    show this help message and exit
-  --container CONTAINER     ID of the container to retrieve
-  --tags TAG [TAG]*         List of tags of containers to retrieve
-
-Only one of --container or --tags flags can be included at once
-
-For example:
-    @<bot_username> get_container --container 16
-  or
-    @<bot_username> get_container --tags tag1 tag2 tag3
-"""
 
 
 class GetContainerCommand(Command):
     """ Get Container Command. """
 
-    HELP_MESSAGE = HELP_MESSAGE
+    COMMAND_NAME = 'get_container'
 
-    def _create_parser(self):
-        container_parser = ArgumentParser(exit_on_error=False)
-        container_parser.add_argument('--container')
-        container_parser.add_argument('--tags', nargs='+')
-        return container_parser
+    @staticmethod
+    def _create_tags_message(tags) -> str:
+        return ', '.join(f'"{tag}"' for tag in tags)
 
-    def parse(self, command):
-        """ Parse the specified command string. """
-        parse_success, result = self._get_parsed_args(command)
+    def configure_parser(self, parser) -> None:
+        """ Configure the parser for this command. """
+        parser.add_argument('--container', help='The container ID to retrieve')
+        parser.add_argument('--tags', nargs='+', help='The tags to filter on')
+        parser.add_argument('--name', help='The container name to filter on')
+        parser.add_argument('--label', help='The container label to filter on')
+        parser.add_argument('--status', help='The container status to filter on')
+        parser.add_argument('--owner', help='The container owner to filter on')
 
-        if not parse_success:
-            return False, result
+    def check_authorization(self) -> bool:
+        """ Return True if authorized to run command. """
+        if self.slack_bot.permit_container:
+            logging.debug('**Command: "%s" is permitted', self.COMMAND_NAME)
+            return True
 
-        parsed_args = result
+        logging.debug('**Command: "%s" is not permitted', self.COMMAND_NAME)
+        return False
 
+    def execute(self, parsed_args):
+        """ Execute the command with the specified arguments and return a message of the result. """
         container = parsed_args.container
         tags = parsed_args.tags
 
         # Perform on XOR to make sure only one of the arguments is set
         if (container is not None) == (tags is not None):
-            return False, self.HELP_MESSAGE
-
-        def create_tags_message(tags):
-            return ', '.join(f'"{tag}"' for tag in tags)
+            return self.HELP_MESSAGE
 
         if container:
             container_info = {}
@@ -74,9 +61,9 @@ class GetContainerCommand(Command):
                 container = int(container)
             except Exception:
                 try:
-                    return False, f'Could not parse container ID: {container}'
+                    return f'Could not parse container ID: {container}'
                 except Exception:
-                    return False, 'Could not parse given container ID'
+                    return 'Could not parse given container ID'
 
             try:
                 query_parameters = {}
@@ -85,7 +72,7 @@ class GetContainerCommand(Command):
                                                                  query_parameters=query_parameters)
                 container_info = get_container_request.json()
             except Exception as e:
-                return False, f'Could not retrieve container data. Could not connect to REST endpoint: {e}'
+                return f'Could not retrieve container data. Could not connect to REST endpoint: {e}'
 
             message = ''
             for key, value in container_info.items():
@@ -102,16 +89,16 @@ class GetContainerCommand(Command):
                 except Exception:
                     message += f'{key}: Value could not be parsed\n'
 
-            return True, message
+            return message
 
         if tags:
             container_dict = self.slack_bot._create_container_dict()
 
             if container_dict is None:
-                return False, 'Could not get containers, error contacting the REST endpoint'
+                return 'Could not get containers, error contacting the REST endpoint'
 
             if not container_dict:
-                return False, 'Found no containers on the Phantom instance'
+                return 'Found no containers on the Phantom instance'
 
             bad_tags = []
             container_list = []
@@ -137,8 +124,11 @@ class GetContainerCommand(Command):
             for container in container_list:
 
                 try:
-                    query_parameters = {}
-                    query_parameters['page_size'] = 0
+                    query_parameters = {
+                        'page_size': 0,
+                        'sort': 'id',
+                        'order': 'desc',
+                    }
                     get_container_request = self.slack_bot._soar_get(constants.SoarRestEndpoint.CONTAINER,
                                                                      path_postfix=f'/{container}',
                                                                      query_parameters=query_parameters)
@@ -153,17 +143,13 @@ class GetContainerCommand(Command):
                     message_list.append(f'Name: {info["name"]}')
                     message_list.append(f'ID: {info["id"]}')
                     message_list.append(f'Label: {info["label"]}')
-                    message_list.append(f'Tags: {create_tags_message(info["tags"])}')
+                    message_list.append(f'Tags: {self._create_tags_message(info["tags"])}')
                 except Exception:
                     message_list.append(f'Could not parse container info for container {container}')
 
                 message_list.append('')
 
             if bad_tags:
-                message_list.append(f'Tags with no results: {create_tags_message(bad_tags)}')
+                message_list.append(f'Tags with no results: {self._create_tags_message(bad_tags)}')
 
-            return True, '\n'.join(message_list)
-
-    def execute(self, request_body, channel):
-        """ Execute the specified request body for the command and post the result on the specified channel. """
-        return request_body
+            return '\n'.join(message_list)

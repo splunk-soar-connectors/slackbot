@@ -14,52 +14,34 @@
 # and limitations under the License.
 
 import logging
-from argparse import ArgumentParser
 
 import slack_bot_consts as constants
 from commands.command import Command
-
-HELP_MESSAGE = """
-usage:
-
-list <actions|containers|playbooks>
-
-arguments:
-  --help        show this help message and exit
-  object        name of object to list, can be 'actions', 'containers', or 'playbooks'
-
-For example:
-    @<bot_username> list containers
-  or
-    @<bot_username> list actions
-  or
-    @<bot_username> list playbooks
-"""
 
 
 class ListCommand(Command):
     """ List Command. """
 
-    HELP_MESSAGE = HELP_MESSAGE
+    COMMAND_NAME = 'list'
 
-    def _create_parser(self):
-        list_parser = ArgumentParser(exit_on_error=False, add_help=False)
-        list_parser.add_argument('--help', dest='aid', action='store_true')
-        list_parser.add_argument('listee', choices=['actions', 'containers'])
-        return list_parser
+    def configure_parser(self, parser) -> None:
+        """ Configure the parser for this command. """
+        parser.add_argument('listee', choices=['actions', 'containers', 'playbooks'])
 
-    def parse(self, command):
-        """ Parse the specified command string. """
-        parse_success, result = self._get_parsed_args(command)
+    def check_authorization(self) -> bool:
+        """ Return True if authorized to run command. """
+        if self.slack_bot.permit_list:
+            logging.debug('**Command: "%s" is permitted', self.COMMAND_NAME)
+            return True
 
-        if not parse_success:
-            return False, result
+        logging.debug('**Command: "%s" is not permitted', self.COMMAND_NAME)
+        return False
 
-        parsed_args = result
-
+    def execute(self, parsed_args) -> str:
+        """ Execute the command with the specified arguments and return a message of the result. """
         message_list = []
         if parsed_args.listee == 'actions':
-            sorted_actions = sorted(action.name for action in self.slack_bot.get_action_list())
+            sorted_actions = sorted(self.slack_bot.get_action_dict().keys())
 
             for action in sorted_actions:
                 message_list.append(str(action))
@@ -71,7 +53,8 @@ class ListCommand(Command):
             try:
                 query_parameters = {}
                 query_parameters['page_size'] = 0
-                get_containers_request = self.slack_bot._soar_get(constants.SoarRestEndpoint.CONTAINER, query_parameters=query_parameters)
+                get_containers_request = self.slack_bot._soar_get(constants.SoarRestEndpoint.CONTAINER,
+                                                                  query_parameters=query_parameters)
             except Exception as e:
                 logging.exception('Failed to retrieve container data.')
                 return False, f'Could not retrieve container data. Could not connect to REST endpoint: {e}'
@@ -91,8 +74,4 @@ class ListCommand(Command):
             message_list.append('')
             message_list.append('For more information on a container, try "get_container <container_id>"')
 
-        return True, '\n'.join(message_list)
-
-    def execute(self, request_body, channel):
-        """ Execute the specified request body for the command and post the result on the specified channel. """
-        return request_body
+        return '\n'.join(message_list)

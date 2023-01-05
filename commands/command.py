@@ -13,42 +13,35 @@
 # either express or implied. See the License for the specific language governing permissions
 # and limitations under the License.
 
+import slack_bot_consts as constants
+
 
 class Command():
     """ Slack Bot command base class. """
 
-    HELP_MESSAGE = None
-
-    def __init__(self, slack_bot):
+    def __init__(self, slack_bot, channel):
         self.slack_bot = slack_bot
+        self.channel = channel
 
-        if self.HELP_MESSAGE is None:
-            raise Exception('A help message must be specified in HELP_MESSAGE')
-
-        self.command_parser = self._create_parser()
-
-    def _create_parser(self):
-        """ Initialize the command parser. """
+    def configure_parser(self, parser) -> None:
+        """ Configure the parser for this command. """
         raise NotImplementedError
 
-    def _get_parsed_args(self, command):
+    def check_authorization_and_execute(self, parsed_args) -> str:
         """
-        Parse the specified command string.
+        Check authorization and execute the command.
 
-        Returns true and the parsed_args if successful.
-        Returns false and a help message if failed.
+        Return a message with the result.
         """
-        try:
-            parsed_args = self.command_parser.parse_args(command)
-        except:  # noqa: We also want to catch SystemError exceptions
-            return False, self.HELP_MESSAGE
+        if not self.check_authorization():
+            return constants.SLACK_BOT_ERROR_COMMAND_NOT_PERMITTED
 
-        return True, parsed_args
+        return self.execute(parsed_args)
 
-    def parse(self, command):
-        """ Parse the specified command string. """
+    def check_authorization(self) -> bool:
+        """ Return True if authorized to run command. """
         raise NotImplementedError
 
-    def execute(self, request_body, channel):
-        """ Execute the specified request body for the command and post the result on the specified channel. """
+    def execute(self, parsed_args) -> str:
+        """ Execute the specified  the command using the specified arguments and return a message with the result. """
         raise NotImplementedError

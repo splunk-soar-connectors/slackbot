@@ -13,56 +13,35 @@
 # either express or implied. See the License for the specific language governing permissions
 # and limitations under the License.
 
-from argparse import ArgumentParser
+import logging
 
 import slack_bot_consts as constants
 from commands.command import Command
-
-HELP_MESSAGE = """
-usage:
-
-run_playbook <--repo REPO PLAYBOOK_NAME | PLAYBOOK_ID> CONTAINER_ID
-
-required arguments:
-  PLAYBOOK_NAME      Name of the playbook to run (Required if repo argument is included)
-  PLAYBOOK_ID        ID of the playbook to run (Required if no repo argument is included)
-  CONTAINER_ID      ID of container to run playbook on
-
-optional arguments:
-  --help        show this help message and exit
-  --repo REPO   Name of the repo the playbook is in (required if playbook
-                argument is a name, and not an ID)
-
-For example:
-    @<bot_username> run_playbook --repo community invesigate 25
-  or
-    @<bot_username> run_playbook 1 25
-"""
 
 
 class RunPlaybookCommand(Command):
     """ Run Playbook Command. """
 
-    HELP_MESSAGE = HELP_MESSAGE
+    COMMAND_NAME = 'run_playbook'
 
-    def _create_parser(self):
-        playbook_parser = ArgumentParser(exit_on_error=False)
-        playbook_parser.add_argument('--repo', dest='repo',
-                                     help='Name of the repo the playbook is in '
-                                          '(required if playbook argument is a name, and not an ID)')
-        playbook_parser.add_argument('playbook', help='Name or ID of the playbook to run')
-        playbook_parser.add_argument('container', help='ID of container to run playbook on')
-        return playbook_parser
+    def configure_parser(self, parser) -> None:
+        """ Configure the parser for this command. """
+        parser.add_argument('--repo',
+                            help='Name of the repo the playbook is in '
+                                '(required if playbook argument is a name, and not an ID)')
+        parser.add_argument('playbook', help='Name or ID of the playbook to run')
+        parser.add_argument('container', help='ID of container to run playbook on')
 
-    def parse(self, command):
-        """ Parse the specified command string. """
-        parse_success, result = self._get_parsed_args(command)
+    def check_authorization(self) -> bool:
+        """ Return True if authorized to run command. """
+        if self.slack_bot.permit_playbook:
+            logging.debug('**Command: "%s" is permitted', self.COMMAND_NAME)
+            return True
 
-        if not parse_success:
-            return False, result
+        logging.debug('**Command: "%s" is not permitted', self.COMMAND_NAME)
+        return False
 
-        parsed_args = result
-
+    def _process_args(self, parsed_args):
         request_body = {}
         request_body['run'] = True
         request_body['container_id'] = parsed_args.container
@@ -70,7 +49,6 @@ class RunPlaybookCommand(Command):
         # Check to see if its a numeric ID
         try:
             playbook = int(parsed_args.playbook)
-
         except Exception:
             if not parsed_args.repo:
                 return False, 'repo argument is required when supplying playbook name instead of playbook ID'
@@ -81,11 +59,14 @@ class RunPlaybookCommand(Command):
 
         return True, request_body
 
-    def execute(self, request_body, channel):
-        """ Execute the specified request body for the command and post the result on the specified channel. """
+    def execute(self, parsed_args) -> str:
+        """ Execute the command with the specified arguments and return a message of the result. """
+        success, result = self._process_args(parsed_args)
+        if not success:
+            return result
 
+        request_body = result
         try:
-
             playbook_run_request = self.slack_bot._soar_post(constants.SoarRestEndpoint.PLAYBOOK_RUN,
                                                              body=request_body)
             resp = playbook_run_request.json()
@@ -105,6 +86,6 @@ class RunPlaybookCommand(Command):
 
         container_url = f'{self.slack_bot.phantom_url}mission/{container_id}'
 
-        self.slack_bot._post_message(f'Container URL: {container_url}', channel, code_block=False)
+        self.slack_bot._post_message(f'Container URL: {container_url}', self.channel, code_block=False)
 
         return f'Playbook: {playbook_id}\nPlaybook run ID: {resp["playbook_run_id"]}\nPlaybook queueing result: Playbook run successfully queued'

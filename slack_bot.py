@@ -12,11 +12,14 @@
 # the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
 # either express or implied. See the License for the specific language governing permissions
 # and limitations under the License.
+import argparse
 import logging
 import os
 import shlex
 import sys
 import tempfile
+from collections import defaultdict
+from io import StringIO
 from pathlib import Path
 
 import encryption_helper
@@ -40,13 +43,12 @@ if os.path.exists(f'{app_dir}/dependencies'):
     os.sys.path.insert(0, f'{app_dir}/dependencies')
 
 
-SLACK_BOT_HELP_MESSAGE = """
-usage:
-
-@<bot_username> act|run_playbook|get_container|list
-
-For more information on a specific command, try @<bot_username> <command> --help
-"""
+AVAILABLE_COMMANDS = sorted([
+    GetContainerCommand,
+    ListCommand,
+    RunActionCommand,
+    RunPlaybookCommand,
+], key=lambda command: command.COMMAND_NAME)
 
 
 def create_query_string(query_parameters):
@@ -274,8 +276,8 @@ class SlackBot(object):
             self.asset_dict[asset_id] = asset_object
             self.asset_dict[asset_name] = asset_object
 
-    def get_action_list(self, name=None):
-        """ Return a list of available action objects. """
+    def get_action_dict(self, name=None):
+        """ Return a dictionary with lists of available action objects by action name. """
         try:
             query_parameters = {}
             query_parameters['page_size'] = 0
@@ -289,7 +291,7 @@ class SlackBot(object):
             logging.exception('Failed to query for actions.')
             return []
 
-        action_list = []
+        action_dict = defaultdict(list)
         for action in action_request.json().get('data', []):
             action_name = action.get('action')
             action_id = action.get('id')
@@ -301,16 +303,19 @@ class SlackBot(object):
             action_object = Action(action_name, action_id, action_app)
             action_object.add_parameters(action['parameters'])
             action_object.assets = self.app_to_asset_dict.get(action_app, [])
-            action_list.append(action_object)
+            action_dict[action_name].append(action_object)
 
-        return action_list
+        return action_dict
 
     def _create_container_dict(self):
         """ Maps container IDs to container objects """
 
         try:
-            query_parameters = {}
-            query_parameters['page_size'] = 0
+            query_parameters = {
+                'page_size': 0,
+                'sort': 'id',
+                'order': 'desc',
+            }
             r = self._soar_get(SoarRestEndpoint.CONTAINER, query_parameters=query_parameters)
         except Exception:
             return None
@@ -545,7 +550,7 @@ class SlackBot(object):
 
             Without this no-op handler definition a warning log will get printed every time a message comes in.
             """
-            pass
+            return
 
         handler = SocketModeHandler(app, self.socket_token)
         handler.start()
@@ -568,84 +573,40 @@ class SlackBot(object):
                 logging.info('**User "%s" is not permitted to use bot', user)
                 return False
 
-    def _check_command_authorization(self, cmd_type):
-        if cmd_type == 'act':
-            if self.permit_act:
-                logging.debug('**Command: "%s" is permitted', cmd_type)
-                return True
-            else:
-                logging.debug('**Command:"%s" is not permitted', cmd_type)
-                return False
-
-        if cmd_type == 'run_playbook':
-            if self.permit_playbook:
-                logging.debug('**Command: "%s" is permitted', cmd_type)
-                return True
-            else:
-                logging.debug('**Command: "%s" is not permitted', cmd_type)
-                return False
-
-        if cmd_type == 'get_container':
-            if self.permit_container:
-                logging.debug('**Command: "%s" is permitted, %s', cmd_type)
-                return True
-            else:
-                logging.debug('**Command: "%s" is not permitted', cmd_type)
-                return False
-
-        if cmd_type == 'list':
-            if self.permit_list:
-                logging.debug('**Command: "%s" is permitted', cmd_type)
-                return True
-            else:
-                logging.debug('**Command: "%s" is not permitted', cmd_type)
-                return False
-        else:
-            return False
-
     def _handle_command(self, command, channel):
 
+        parser = argparse.ArgumentParser(exit_on_error=False,
+                                         prog='@<bot_username>',
+                                         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+        subparsers = parser.add_subparsers(title='commands')
+
+        for slack_bot_command in AVAILABLE_COMMANDS:
+            subparser = subparsers.add_parser(slack_bot_command.COMMAND_NAME,
+                                              argument_default=argparse.SUPPRESS,  # Avoid printing None if no default
+                                              formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+            command_instance = slack_bot_command(self, channel)
+            command_instance.configure_parser(subparser)
+            subparser.set_defaults(func=command_instance.check_authorization_and_execute)
+
+        argparse_output = None
         try:
-            args = shlex.split(command)
-        except Exception as e:
-            self._post_message('Could not parse arguments:\n\n{}'.format(e), channel)
-            return
-
-        cmd_type = args[0]
-        if cmd_type not in ['act', 'run_playbook', 'get_container', 'list']:
-            message = 'Unknown Command\n\n {}'.format(SLACK_BOT_HELP_MESSAGE)
-            self._post_message(message, channel)
-            return
-
-        if not self._check_command_authorization(cmd_type):
-            message = SLACK_BOT_ERROR_COMMAND_NOT_PERMITTED
-            self._post_message(message, channel)
-            return
-
-        if cmd_type == 'act':
-            logging.info('**permit_bot_act: %s', self.permit_act)
-            command = RunActionCommand(self)
-        elif cmd_type == 'run_playbook':
-            logging.info('**permit_bot_playbook: %s', self.permit_playbook)
-            command = RunPlaybookCommand(self)
-        elif cmd_type == 'get_container':
-            logging.info('**permit_bot_container: %s', self.permit_container)
-            command = GetContainerCommand(self)
-        elif cmd_type == 'list':
-            logging.info('**permit_bot_list: %s', self.permit_list)
-            command = ListCommand(self)
-        else:
-            command = None
-            message = SLACK_BOT_HELP_MESSAGE
-
-        if command:
-            status, result = command.parse(args[1:])
-            if status:
-                message = command.execute(result, channel)
+            # argparse writes to stdout, so we need to capture it
+            sys.stdout = argparse_output = StringIO()
+            args = parser.parse_args(shlex.split(command))
+        except:  # noqa: We also want to catch SystemError exceptions from argparse
+            if argparse_output is not None:
+                self._post_message(f'Could not parse arguments:\n\n{argparse_output.getvalue()}', channel)
             else:
-                message = result
+                logging.exception('No output found from failed argument parsing attempt.')
+                self._post_message('Unknown error encountered while parsing arguments. '
+                                    'Check the app log to see the detailed exception.', channel)
+            return
+        finally:
+            # Reset stdout back to normal
+            sys.stdout = sys.__stdout__
 
-        self._post_message(message, channel)
+        result_message = args.func(args)
+        self._post_message(result_message, channel)
 
 
 def main():  # noqa

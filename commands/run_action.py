@@ -13,61 +13,40 @@
 # either express or implied. See the License for the specific language governing permissions
 # and limitations under the License.
 
-from argparse import ArgumentParser
+import logging
 
 import slack_bot_consts as constants
 from commands.command import Command
-
-HELP_MESSAGE = """
-usage:
-
-act ACTION_NAME [--container CONTAINER_ID] [--asset ASSET] [--name NAME]
-    [--TYPE TYPE] [--parameters PARAMETER:VALUE [PARAMETER:VALUE]*]
-
-required arguments:
-  ACTION_NAME               Name of the action to run
-  --container CONTAINER_ID  ID of the container to run the action on
-
-optional arguments:
-  --help                    show this help message or show information about the specified action
-  --name NAME               Set a name for the action (defaults to 'Slack generated action')
-  --type TYPE               Set the type of the action (defaults to 'phantombot')
-  --asset ASSET             Name or ID of the asset to run the action on
-                            If no asset is specified, the given action will run on all possible assets
-  --parameters PARAMETER:VALUE [PARAMETER:VALUE]*]
-                            List of parameter/value pairs in the format
-                            param1:value1 param2:value2...
-
-For example:
-    @<bot_username> act "geolocate ip" --parameters ip:1.1.1.1 --container 1291
-"""
 
 
 class RunActionCommand(Command):
     """ Run Action Command. """
 
-    HELP_MESSAGE = HELP_MESSAGE
+    COMMAND_NAME = 'act'
 
-    def _create_parser(self):
-        action_parser = ArgumentParser(add_help=False, exit_on_error=False)
-        action_parser.add_argument('action')
-        action_parser.add_argument('--help', dest='aid', action='store_true')
-        action_parser.add_argument('--container')
-        action_parser.add_argument('--name', default='Slack generated action')
-        action_parser.add_argument('--type', dest='typ', default='phantombot')
-        action_parser.add_argument('--asset')
-        action_parser.add_argument('--parameters', nargs='+')
-        return action_parser
+    def configure_parser(self, parser) -> None:
+        """ Configure the parser for this command. """
+        parser.add_argument('action', help='Action name')
+        parser.add_argument('container', help='ID of the container to run the action on')
+        parser.add_argument('--name', default='Slack generated action', help='Name for the action run')
+        parser.add_argument('--type', default='soarbot', help='Type of action run')
+        parser.add_argument('--asset',
+                            help='Name or ID of the asset to run the action on. '
+                                 'If no asset is specified, the given action will run on all possible assets')
+        parser.add_argument('--parameters', nargs='+',
+                            help='List of parameter/value pairs in the format param1:value1 param2:value2')
 
-    def parse(self, command):
+    def check_authorization(self) -> bool:
+        """ Return True if authorized to run command. """
+        if self.slack_bot.permit_playbook:
+            logging.debug('**Command: "%s" is permitted', self.COMMAND_NAME)
+            return True
+
+        logging.debug('**Command: "%s" is not permitted', self.COMMAND_NAME)
+        return False
+
+    def _process_args(self, parsed_args):
         """ Parse the specified command string. """
-        parse_success, result = self._get_parsed_args(command)
-
-        if not parse_success:
-            return False, result
-
-        parsed_args = result
-
         request_body = {}
         request_body['targets'] = []
 
@@ -136,7 +115,7 @@ class RunActionCommand(Command):
             return False, total_message
 
         request_body['action'] = action
-        request_body['type'] = parsed_args.typ
+        request_body['type'] = parsed_args.type
         request_body['name'] = parsed_args.name
         request_body['container_id'] = container
 
@@ -178,9 +157,13 @@ class RunActionCommand(Command):
 
         return True, request_body
 
-    def execute(self, request_body, channel):
-        """ Execute the specified request body for the command and post the result on the specified channel. """
+    def execute(self, parsed_args):
+        """ Execute the command with the specified arguments and return a message of the result. """
+        success, result = self._process_args(parsed_args)
+        if not success:
+            return result
 
+        request_body = result
         try:
             action_run_request = self.slack_bot._soar_post(constants.SoarRestEndpoint.ACTION_RUN,
                                                            body=request_body)
@@ -203,6 +186,6 @@ class RunActionCommand(Command):
 
         action_url = f'{self.slack_bot.phantom_url}action/{run_id}'
 
-        self.slack_bot._post_message(f'Action run URL: {action_url}', channel, code_block=False)
+        self.slack_bot._post_message(f'Action run URL: {action_url}', self.channel, code_block=False)
 
         return f'Message: {response["message"]}\nAction run ID: {run_id}'
