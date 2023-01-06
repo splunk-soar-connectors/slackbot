@@ -37,63 +37,57 @@
             "required": true,
             "order": 0
         },
-        "verification_token": {
-            "data_type": "password",
-            "description": "Verification Token",
-            "required": true,
-            "order": 1
-        },
         "user_token": {
             "data_type": "password",
             "description": "OAuth Access Token",
-            "order": 2
+            "order": 1
         },
         "socket_token": {
             "data_type": "password",
             "description": "Socket Token",
-            "order": 3
+            "order": 2
         },
         "ph_auth_token": {
             "data_type": "password",
             "description": "Automation User Auth Token",
-            "order": 4
+            "order": 3
         },
         "timeout": {
             "description": "Question timeout (in minutes)",
             "data_type": "numeric",
             "default": 30,
-            "order": 5
+            "order": 4
         },
         "response_poll_interval": {
             "description": "How often to poll for a response (in seconds)",
             "data_type": "numeric",
             "default": 30,
-            "order": 6
+            "order": 5
         },
         "permit_bot_act": {
             "description": "Permit 'act' commands on Bot (I.E. @SOARbot act 'list channels' --container 123 --asset slack)",
             "data_type": "boolean",
-            "order": 7
+            "order": 6
         },
         "permit_bot_playbook": {
             "description": "Permit 'run_playbook' commands on Bot (I.E. @SOARbot run_playbook <playbook_id> <container_id>)",
             "data_type": "boolean",
-            "order": 8
+            "order": 7
         },
         "permit_bot_container": {
             "description": "Permit 'get_container' commands on Bot (I.E. @SOARbot get_container <container_id>)",
             "data_type": "boolean",
-            "order": 9
+            "order": 8
         },
         "permit_bot_list": {
             "description": "Permit 'list' commands on Bot (I.E. @SOARbot list [actions|containers])",
             "data_type": "boolean",
-            "order": 10
+            "order": 9
         },
         "permitted_bot_users": {
             "description": "Users permitted to use Bot Actions. Comma seperated list of Member IDs. Leave blank to allow all users (Default Setting)",
             "data_type": "string",
-            "order": 11
+            "order": 10
         }
     },
     "actions": [

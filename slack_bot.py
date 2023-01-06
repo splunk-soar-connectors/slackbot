@@ -167,7 +167,6 @@ class SlackBot(object):
         base_url += '/' if not base_url.endswith('/') else ''
         self.base_url = base_url
         self.phantom_url = base_url
-        self.verification_token = None
         self._generate_dicts()
 
     def _soar_get(self, endpoint: SoarRestEndpoint, query_parameters: dict = None, path_postfix: str = ''):
