@@ -765,9 +765,9 @@ def main():  # noqa
         logging.error('Given BOT_TOKEN failed authentication with Slack')
         fail = True
 
-    bot_username = resp_json.get('user_id')
+    bot_id = resp_json.get('user_id')
 
-    if not bot_username:
+    if not bot_id:
         logging.error('Could not get bot username from Slack')
         fail = True
 
@@ -778,7 +778,7 @@ def main():  # noqa
     sb = SlackBot(
         bot_token=bot_config.BOT_TOKEN,
         socket_token=bot_config.SOCKET_TOKEN,
-        bot_id=bot_username,
+        bot_id=bot_id,
         base_url=bot_config.PHANTOM_URL,
         verify=bot_config.VERIFY_CERT,
         auth_token=pt,

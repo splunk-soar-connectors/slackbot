@@ -37,19 +37,16 @@
             "required": true,
             "order": 0
         },
-        "user_token": {
-            "data_type": "password",
-            "description": "OAuth Access Token",
-            "order": 1
-        },
         "socket_token": {
             "data_type": "password",
             "description": "Socket Token",
+            "required": true,
             "order": 2
         },
         "ph_auth_token": {
             "data_type": "password",
             "description": "Automation User Auth Token",
+            "required": true,
             "order": 3
         },
         "timeout": {
