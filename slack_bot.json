@@ -43,7 +43,7 @@
             "required": true,
             "order": 2
         },
-        "ph_auth_token": {
+        "soar_auth_token": {
             "data_type": "password",
             "description": "Automation User Auth Token",
             "required": true,

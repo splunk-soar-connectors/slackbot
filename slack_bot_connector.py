@@ -287,7 +287,7 @@ class SlackBotConnector(phantom.BaseConnector):
 
         self._bot_token = config.get(SLACK_BOT_JSON_BOT_TOKEN)
         self._socket_token = config.get(SLACK_BOT_JSON_SOCKET_TOKEN)
-        self._ph_auth_token = config.get(SLACK_BOT_JSON_PH_AUTH_TOKEN)
+        self._soar_auth_token = config.get(SLACK_BOT_JSON_SOAR_AUTH_TOKEN)
         self._permit_act = config.get(SLACK_BOT_JSON_PERMIT_BOT_ACT, False)
         self._permit_playbook = config.get(SLACK_BOT_JSON_PERMIT_BOT_PLAYBOOK, False)
         self._permit_container = config.get(SLACK_BOT_JSON_PERMIT_BOT_CONTAINER, False)
@@ -310,7 +310,7 @@ class SlackBotConnector(phantom.BaseConnector):
 
         # Storing Bot file required data in state file
         self._state['ph_base_url'] = ph_base_url
-        self._state[SLACK_BOT_JSON_PH_AUTH_TOKEN] = self._ph_auth_token
+        self._state[SLACK_BOT_JSON_SOAR_AUTH_TOKEN] = self._soar_auth_token
         self._state[SLACK_BOT_JSON_BOT_TOKEN] = self._bot_token
         self._state[SLACK_BOT_JSON_SOCKET_TOKEN] = self._socket_token
         self._state[SLACK_BOT_JSON_PERMIT_BOT_ACT] = self._permit_act
@@ -331,8 +331,8 @@ class SlackBotConnector(phantom.BaseConnector):
             if self._socket_token:
                 self._state[SLACK_BOT_JSON_SOCKET_TOKEN] = self.encrypt_state(self._socket_token, 'socket')
 
-            if self._ph_auth_token:
-                self._state[SLACK_BOT_JSON_PH_AUTH_TOKEN] = self.encrypt_state(self._ph_auth_token, 'ph_auth')
+            if self._soar_auth_token:
+                self._state[SLACK_BOT_JSON_SOAR_AUTH_TOKEN] = self.encrypt_state(self._soar_auth_token, 'soar_auth')
 
         except Exception as e:
             self.debug_print('{}: {}'.format(SLACK_BOT_ENCRYPTION_ERROR, self._get_error_message_from_exception(e)))

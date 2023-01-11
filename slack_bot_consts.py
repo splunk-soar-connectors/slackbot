@@ -49,7 +49,7 @@ ACTION_ID_ON_POLL = 'on_poll'
 SLACK_BASE_URL = 'https://slack.com/api/'
 
 SLACK_BOT_JSON_BOT_TOKEN = 'bot_token'
-SLACK_BOT_JSON_PH_AUTH_TOKEN = 'ph_auth_token'
+SLACK_BOT_JSON_SOAR_AUTH_TOKEN = 'soar_auth_token'
 SLACK_BOT_JSON_SOCKET_TOKEN = 'socket_token'
 SLACK_BOT_JSON_PERMIT_BOT_ACT = 'permit_bot_act'
 SLACK_BOT_JSON_PERMIT_BOT_PLAYBOOK = 'permit_bot_playbook'

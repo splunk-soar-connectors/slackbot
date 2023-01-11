@@ -622,7 +622,7 @@ def main():  # noqa
         ph_base_url = state.get('ph_base_url')
         bot_token = state.get(SLACK_BOT_JSON_BOT_TOKEN)
         socket_token = state.get(SLACK_BOT_JSON_SOCKET_TOKEN)
-        ph_auth_token = state.get(SLACK_BOT_JSON_PH_AUTH_TOKEN)
+        soar_auth_token = state.get(SLACK_BOT_JSON_SOAR_AUTH_TOKEN)
         permit_act = state.get(SLACK_BOT_JSON_PERMIT_BOT_ACT)
         permit_playbook = state.get(SLACK_BOT_JSON_PERMIT_BOT_PLAYBOOK)
         permit_container = state.get(SLACK_BOT_JSON_PERMIT_BOT_CONTAINER)
@@ -644,8 +644,8 @@ def main():  # noqa
             sys.exit(1)
 
         try:
-            if ph_auth_token:
-                ph_auth_token = decrypt_state(asset_id, ph_auth_token, 'ph_auth')
+            if soar_auth_token:
+                soar_auth_token = decrypt_state(asset_id, soar_auth_token, 'soar_auth')
         except Exception:
             logging.exception(SLACK_BOT_DECRYPTION_ERROR)
             sys.exit(1)
@@ -655,7 +655,7 @@ def main():  # noqa
             socket_token=socket_token,
             bot_id=bot_id,
             base_url=ph_base_url,
-            auth_token=ph_auth_token,
+            auth_token=soar_auth_token,
             permit_act=permit_act,
             permit_playbook=permit_playbook,
             permit_container=permit_container,
