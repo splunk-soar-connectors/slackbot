@@ -517,13 +517,14 @@ class SlackBot(object):
                 logging.info('**body exists, app_mention text: %s', out_text)
 
                 if out_text and out_text.startswith(self.cmd_start):
+                    channel = body.get('event', {}).get('channel', '#general')
                     if out_text.strip() == self.cmd_start:
+                        # Print out the help message in case of an empty command
                         self._post_message(
-                            SLACK_BOT_HELP_MESSAGE,
+                            self._create_parser(channel).format_help(),
                             body.get('event', {}).get('channel', '#general'),
                         )
 
-                    channel = body.get('event', {}).get('channel', '#general')
                     command = out_text[len(self.cmd_start):].strip()
 
                     if command and channel:
@@ -572,8 +573,7 @@ class SlackBot(object):
                 logging.info('**User "%s" is not permitted to use bot', user)
                 return False
 
-    def _handle_command(self, command, channel):
-
+    def _create_parser(self, channel):
         parser = argparse.ArgumentParser(exit_on_error=False,
                                          prog='@<bot_username>',
                                          formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -587,6 +587,11 @@ class SlackBot(object):
             command_instance = slack_bot_command(self, channel)
             command_instance.configure_parser(subparser)
             subparser.set_defaults(func=command_instance.check_authorization_and_execute)
+
+        return parser
+
+    def _handle_command(self, command, channel):
+        parser = self._create_parser(channel)
 
         argparse_output = None
         try:
@@ -628,6 +633,8 @@ def main():  # noqa
         permit_container = state.get(SLACK_BOT_JSON_PERMIT_BOT_CONTAINER)
         permit_list = state.get(SLACK_BOT_JSON_PERMIT_BOT_LIST)
         permitted_users = state.get(SLACK_BOT_JSON_PERMITTED_USERS)
+        log_level = state.get(SLACK_BOT_JSON_LOG_LEVEL)
+        logging.getLogger().setLevel(log_level)
 
         try:
             if bot_token:
@@ -669,14 +676,13 @@ def main():  # noqa
 
     fail = False
 
+    logging.getLogger().setLevel(logging.DEBUG)
+
     try:
-
         bt = bot_config.BOT_TOKEN
-
         if not isinstance(bt, str):
             logging.error('The BOT_TOKEN entry in the bot_config file appears to not be a string')
             fail = True
-
     except Exception:
         logging.exception('Could not find a BOT_TOKEN entry in bot_config file')
         fail = True
@@ -688,45 +694,34 @@ def main():  # noqa
                 'The SOCKET_TOKEN entry in the bot_config file appears to not be a string'
             )
             fail = True
-
     except Exception:
         logging.exception('Could not find a SOCKET_TOKEN entry in bot_config file')
         fail = True
 
     try:
-
         pu = bot_config.PHANTOM_URL
-
         if not isinstance(pu, str):
             logging.error('The PHANTOM_URL entry in the bot_config file appears to not be a string')
             fail = True
-
     except Exception:
         logging.exception('Could not find a PHANTOM_URL entry in bot_config file')
         fail = True
 
     try:
-
         vc = bot_config.VERIFY_CERT
-
         if not isinstance(vc, bool):
             logging.error('The VERIFY_CERT entry in the bot_config file appears to not be a boolean')
             fail = True
-
     except Exception:
         logging.exception('Could not find a VERIFY_CERT entry in bot_config file')
         fail = True
 
     try:
-
         pt = bot_config.PHANTOM_TOKEN
-
         has_token = True
-
         if not isinstance(pt, str):
             logging.error('The PHANTOM_TOKEN entry in the bot_config file appears to not be a string')
             fail = True
-
     except Exception:
         pt = ''
         has_token = False
@@ -744,7 +739,6 @@ def main():  # noqa
         if not isinstance(pp, str):
             logging.error('The PHANTOM_PASSWORD entry in the bot_config file appears to not be a string')
             fail = True
-
     except Exception:
         auth = ()
         has_basic = False
@@ -790,8 +784,7 @@ if __name__ == '__main__':
     log_file_path = Path(tempfile.gettempdir()) / 'slack_bot.log'
     logging.basicConfig(filename=log_file_path,
                         filemode='a',
-                        format='[%(process)d][%(asctime)s][%(levelname)s] %(message)s',
-                        level=logging.DEBUG)
+                        format='[%(process)d][%(asctime)s][%(levelname)s] %(message)s')
 
     try:
         main()

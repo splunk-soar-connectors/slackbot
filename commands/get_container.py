@@ -76,8 +76,8 @@ class GetContainerCommand(Command):
             '_filter_name__icontains': self._create_query_string(getattr(parsed_args, 'name', None)),
             '_filter_tags__has_any_keys': getattr(parsed_args, 'tags', None),
             '_filter_label__in': getattr(parsed_args, 'labels', None),
-            '_filter_status__in': getattr(parsed_args, 'statuses', None),
-            '_filter_owner__in': getattr(parsed_args, 'owners', None),
+            '_filter_status__name__in': getattr(parsed_args, 'statuses', None),
+            '_filter_owner_name__in': getattr(parsed_args, 'owners', None),
         }
         # Remove empty filters
         query_parameters = {key: value for key, value in query_parameters.items() if value is not None}

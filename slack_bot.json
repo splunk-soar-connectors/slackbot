@@ -85,6 +85,18 @@
             "description": "Users permitted to use Bot Actions. Comma seperated list of Member IDs. Leave blank to allow all users (Default Setting)",
             "data_type": "string",
             "order": 10
+        },
+        "log_level": {
+            "description": "The log level for the bot",
+            "data_type": "string",
+            "order": 10,
+            "value_list": [
+                "DEBUG",
+                "INFO",
+                "WARNING",
+                "ERROR"
+            ],
+            "default": "WARNING"
         }
     },
     "actions": [

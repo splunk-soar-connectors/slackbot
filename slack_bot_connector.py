@@ -259,6 +259,7 @@ class SlackBotConnector(phantom.BaseConnector):
         self._permit_container = None
         self._permit_list = None
         self._permitted_users = None
+        self._log_level = None
 
     def encrypt_state(self, encrypt_var, token_name):
         """ Handle encryption of token.
@@ -293,6 +294,7 @@ class SlackBotConnector(phantom.BaseConnector):
         self._permit_container = config.get(SLACK_BOT_JSON_PERMIT_BOT_CONTAINER, False)
         self._permit_list = config.get(SLACK_BOT_JSON_PERMIT_BOT_LIST, False)
         self._permitted_users = config.get(SLACK_BOT_JSON_PERMITTED_USERS, False)
+        self._log_level = config.get(SLACK_BOT_JSON_LOG_LEVEL)
         self._base_url = SLACK_BASE_URL
 
         self._interval = self._validate_integers(self, config.get('response_poll_interval', 30), SLACK_BOT_RESP_POLL_INTERVAL_KEY)
@@ -318,6 +320,7 @@ class SlackBotConnector(phantom.BaseConnector):
         self._state[SLACK_BOT_JSON_PERMIT_BOT_CONTAINER] = self._permit_container
         self._state[SLACK_BOT_JSON_PERMIT_BOT_LIST] = self._permit_list
         self._state[SLACK_BOT_JSON_PERMITTED_USERS] = self._permitted_users
+        self._state[SLACK_BOT_JSON_LOG_LEVEL] = self._log_level
 
         return phantom.APP_SUCCESS
 
