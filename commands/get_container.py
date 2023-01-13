@@ -41,7 +41,7 @@ class GetContainerCommand(Command):
         """ Configure the parser for this command. """
 
         ored_list_help = 'Space-separated. Any matches will be included (OR)'
-        parser.add_argument('--container', type=int, help='The container ID to filter on')
+        parser.add_argument('--id', dest='container_id', type=int, help='The container ID to filter on')
         parser.add_argument('--name', help='The container name to filter on. Case insensitive')
         parser.add_argument('--tags', nargs='*',
                             help=f'The tags to filter on. {ored_list_help}')
@@ -57,6 +57,8 @@ class GetContainerCommand(Command):
                             help='The sort order to use')
         parser.add_argument('--limit', default=10, type=int,
                             help='The number of results to show. Specify 0 to show all results')
+        parser.add_argument('--short', default=False, action='store_true',
+                            help='If specified, prints the output in a compact format')
 
     def check_authorization(self) -> bool:
         """ Return True if authorized to run command. """
@@ -72,7 +74,7 @@ class GetContainerCommand(Command):
             'page_size': parsed_args.limit,
             'sort': parsed_args.sort_by,
             'order': parsed_args.sort_order,
-            '_filter_id': getattr(parsed_args, 'container', None),
+            '_filter_id': getattr(parsed_args, 'container_id', None),
             '_filter_name__icontains': self._create_query_string(getattr(parsed_args, 'name', None)),
             '_filter_tags__has_any_keys': getattr(parsed_args, 'tags', None),
             '_filter_label__in': getattr(parsed_args, 'labels', None),
@@ -108,12 +110,18 @@ class GetContainerCommand(Command):
             container_id = None
             try:
                 container_id = container['id']
-                message_list.append(f'Name: {container["name"]}')
-                message_list.append(f'ID: {container_id}')
-                message_list.append(f'Label: {container["label"]}')
-                message_list.append(f'Tags: {self._create_tags_message(container["tags"])}')
+                container_name = container['name']
+                if parsed_args.short:
+                    message_list.append(f'ID: {container_id}'.ljust(10) + f'Name: {container_name}')
+                else:
+                    message_list.append(f'Name: {container_name}')
+                    message_list.append(f'ID: {container_id}')
+                    message_list.append(f'Label: {container["label"]}')
+                    message_list.append(f'Tags: {self._create_tags_message(container["tags"])}')
             except Exception:
-                message_list.append(f'Could not parse container info for container {container_id}')
+                failure_message = f'Could not parse container info for container {container_id}'
+                logging.exception(failure_message)
+                message_list.append(failure_message)
 
             message_list.append('')
 
