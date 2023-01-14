@@ -12,8 +12,10 @@
 # the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
 # either express or implied. See the License for the specific language governing permissions
 # and limitations under the License.
+import logging
 
 import slack_bot_consts as constants
+from slack_bot_consts import CommandPermission
 
 
 class Command():
@@ -46,7 +48,13 @@ class Command():
 
     def check_authorization(self) -> bool:
         """ Return True if authorized to run command. """
-        raise NotImplementedError
+        expected_permission = CommandPermission[self.COMMAND_NAME.upper()]
+        if self.slack_bot.command_permissions[expected_permission]:
+            logging.debug('**Command: "%s" is permitted', self.COMMAND_NAME)
+            return True
+
+        logging.debug('**Command: "%s" is not permitted', self.COMMAND_NAME)
+        return False
 
     def execute(self, parsed_args) -> str:
         """ Execute the specified  the command using the specified arguments and return a message with the result. """

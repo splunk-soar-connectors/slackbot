@@ -61,35 +61,10 @@
             "default": 30,
             "order": 5
         },
-        "permit_bot_act": {
-            "description": "Permit 'act' commands on Bot (I.E. @SOARbot act 'list channels' --container 123 --asset slack)",
-            "data_type": "boolean",
-            "order": 6
-        },
-        "permit_bot_playbook": {
-            "description": "Permit 'run_playbook' commands on Bot (I.E. @SOARbot run_playbook <playbook_id> <container_id>)",
-            "data_type": "boolean",
-            "order": 7
-        },
-        "permit_bot_container": {
-            "description": "Permit 'get_container' commands on Bot (I.E. @SOARbot get_container <container_id>)",
-            "data_type": "boolean",
-            "order": 8
-        },
-        "permit_bot_list": {
-            "description": "Permit 'list' commands on Bot (I.E. @SOARbot list [actions|containers])",
-            "data_type": "boolean",
-            "order": 9
-        },
-        "permitted_bot_users": {
-            "description": "Users permitted to use Bot Actions. Comma seperated list of Member IDs. Leave blank to allow all users (Default Setting)",
-            "data_type": "string",
-            "order": 10
-        },
         "log_level": {
             "description": "The log level for the bot",
             "data_type": "string",
-            "order": 10,
+            "order": 6,
             "value_list": [
                 "DEBUG",
                 "INFO",
@@ -97,6 +72,36 @@
                 "ERROR"
             ],
             "default": "WARNING"
+        },
+        "permit_bot_get_action": {
+            "description": "Permit 'get_action' command",
+            "data_type": "boolean",
+            "order": 7
+        },
+        "permit_bot_run_action": {
+            "description": "Permit 'run_action' command",
+            "data_type": "boolean",
+            "order": 8
+        },
+        "permit_bot_get_playbook": {
+            "description": "Permit 'get_playbook' command",
+            "data_type": "boolean",
+            "order": 9
+        },
+        "permit_bot_run_playbook": {
+            "description": "Permit 'run_playbook' command",
+            "data_type": "boolean",
+            "order": 10
+        },
+        "permit_bot_get_container": {
+            "description": "Permit 'get_container' command",
+            "data_type": "boolean",
+            "order": 11
+        },
+        "permitted_bot_users": {
+            "description": "Users permitted to use bot commands. Comma seperated list of Member IDs. Leave blank to allow all users (default)",
+            "data_type": "string",
+            "order": 12
         }
     },
     "actions": [

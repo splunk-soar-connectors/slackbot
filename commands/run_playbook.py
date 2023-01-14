@@ -13,8 +13,6 @@
 # either express or implied. See the License for the specific language governing permissions
 # and limitations under the License.
 
-import logging
-
 import slack_bot_consts as constants
 from commands.command import Command
 
@@ -31,15 +29,6 @@ class RunPlaybookCommand(Command):
                                 '(required if playbook argument is a name, and not an ID)')
         parser.add_argument('playbook', help='Name or ID of the playbook to run')
         parser.add_argument('container', help='ID of container to run playbook on')
-
-    def check_authorization(self) -> bool:
-        """ Return True if authorized to run command. """
-        if self.slack_bot.permit_playbook:
-            logging.debug('**Command: "%s" is permitted', self.COMMAND_NAME)
-            return True
-
-        logging.debug('**Command: "%s" is not permitted', self.COMMAND_NAME)
-        return False
 
     def _process_args(self, parsed_args):
         request_body = {}

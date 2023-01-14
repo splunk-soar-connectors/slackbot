@@ -30,13 +30,6 @@ class GetContainerCommand(Command):
     def _create_tags_message(tags) -> str:
         return ', '.join(f'"{tag}"' for tag in tags)
 
-    @staticmethod
-    def _create_query_string(value) -> str:
-        if value is None:
-            return None
-
-        return f'"{value}"'
-
     def configure_parser(self, parser) -> None:
         """ Configure the parser for this command. """
 
@@ -51,23 +44,14 @@ class GetContainerCommand(Command):
                             help=f'The container statuses to filter on. {ored_list_help}')
         parser.add_argument('--owners', nargs='*',
                             help=f'The container owners to filter on. {ored_list_help}')
-        parser.add_argument('--sort-by', default='id', choices=['id', 'name'],
+        parser.add_argument('--sort-by', default='id', choices=['id', 'name'], type=str.lower,
                             help='The sort key to use')
-        parser.add_argument('--sort-order', default='desc', choices=['asc', 'desc'],
+        parser.add_argument('--sort-order', default='desc', choices=['asc', 'desc'], type=str.lower,
                             help='The sort order to use')
         parser.add_argument('--limit', default=10, type=int,
                             help='The number of results to show. Specify 0 to show all results')
         parser.add_argument('--short', default=False, action='store_true',
                             help='If specified, prints the output in a compact format')
-
-    def check_authorization(self) -> bool:
-        """ Return True if authorized to run command. """
-        if self.slack_bot.permit_container:
-            logging.debug('**Command: "%s" is permitted', self.COMMAND_NAME)
-            return True
-
-        logging.debug('**Command: "%s" is not permitted', self.COMMAND_NAME)
-        return False
 
     def _query_containers(self, parsed_args) -> Result:
         query_parameters = {
@@ -75,7 +59,7 @@ class GetContainerCommand(Command):
             'sort': parsed_args.sort_by,
             'order': parsed_args.sort_order,
             '_filter_id': getattr(parsed_args, 'container_id', None),
-            '_filter_name__icontains': self._create_query_string(getattr(parsed_args, 'name', None)),
+            '_filter_name__icontains': self.slack_bot._create_query_string(getattr(parsed_args, 'name', None)),
             '_filter_tags__has_any_keys': getattr(parsed_args, 'tags', None),
             '_filter_label__in': getattr(parsed_args, 'labels', None),
             '_filter_status__name__in': getattr(parsed_args, 'statuses', None),
@@ -112,17 +96,20 @@ class GetContainerCommand(Command):
                 container_id = container['id']
                 container_name = container['name']
                 if parsed_args.short:
-                    message_list.append(f'ID: {container_id}'.ljust(10) + f'Name: {container_name}')
+                    short_message_list = [
+                        f'ID: {container_id}'.ljust(10),
+                        f'Name: {container_name}',
+                    ]
+                    message_list.append(' '.join(short_message_list))
                 else:
                     message_list.append(f'Name: {container_name}')
                     message_list.append(f'ID: {container_id}')
                     message_list.append(f'Label: {container["label"]}')
                     message_list.append(f'Tags: {self._create_tags_message(container["tags"])}')
+                    message_list.append('')
             except Exception:
                 failure_message = f'Could not parse container info for container {container_id}'
                 logging.exception(failure_message)
                 message_list.append(failure_message)
-
-            message_list.append('')
 
         return '\n'.join(message_list)

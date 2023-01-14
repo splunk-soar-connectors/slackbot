@@ -254,10 +254,7 @@ class SlackBotConnector(phantom.BaseConnector):
         self._interval = None
         self._timeout = None
         self._socket_token = None
-        self._permit_act = None
-        self._permit_playbook = None
-        self._permit_container = None
-        self._permit_list = None
+        self._command_permissions = {}
         self._permitted_users = None
         self._log_level = None
 
@@ -289,10 +286,8 @@ class SlackBotConnector(phantom.BaseConnector):
         self._bot_token = config.get(SLACK_BOT_JSON_BOT_TOKEN)
         self._socket_token = config.get(SLACK_BOT_JSON_SOCKET_TOKEN)
         self._soar_auth_token = config.get(SLACK_BOT_JSON_SOAR_AUTH_TOKEN)
-        self._permit_act = config.get(SLACK_BOT_JSON_PERMIT_BOT_ACT, False)
-        self._permit_playbook = config.get(SLACK_BOT_JSON_PERMIT_BOT_PLAYBOOK, False)
-        self._permit_container = config.get(SLACK_BOT_JSON_PERMIT_BOT_CONTAINER, False)
-        self._permit_list = config.get(SLACK_BOT_JSON_PERMIT_BOT_LIST, False)
+        self._command_permissions = {permission: config.get(permission.value, False)
+                                     for permission in CommandPermission}
         self._permitted_users = config.get(SLACK_BOT_JSON_PERMITTED_USERS, False)
         self._log_level = config.get(SLACK_BOT_JSON_LOG_LEVEL)
         self._base_url = SLACK_BASE_URL
@@ -315,10 +310,8 @@ class SlackBotConnector(phantom.BaseConnector):
         self._state[SLACK_BOT_JSON_SOAR_AUTH_TOKEN] = self._soar_auth_token
         self._state[SLACK_BOT_JSON_BOT_TOKEN] = self._bot_token
         self._state[SLACK_BOT_JSON_SOCKET_TOKEN] = self._socket_token
-        self._state[SLACK_BOT_JSON_PERMIT_BOT_ACT] = self._permit_act
-        self._state[SLACK_BOT_JSON_PERMIT_BOT_PLAYBOOK] = self._permit_playbook
-        self._state[SLACK_BOT_JSON_PERMIT_BOT_CONTAINER] = self._permit_container
-        self._state[SLACK_BOT_JSON_PERMIT_BOT_LIST] = self._permit_list
+        for permission, is_granted in self._command_permissions.items():
+            self._state[permission.value] = is_granted
         self._state[SLACK_BOT_JSON_PERMITTED_USERS] = self._permitted_users
         self._state[SLACK_BOT_JSON_LOG_LEVEL] = self._log_level
 

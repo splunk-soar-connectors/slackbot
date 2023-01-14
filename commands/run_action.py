@@ -13,8 +13,6 @@
 # either express or implied. See the License for the specific language governing permissions
 # and limitations under the License.
 
-import logging
-
 import slack_bot_consts as constants
 from commands.command import Command
 
@@ -22,7 +20,7 @@ from commands.command import Command
 class RunActionCommand(Command):
     """ Run Action Command. """
 
-    COMMAND_NAME = 'act'
+    COMMAND_NAME = 'run_action'
 
     def configure_parser(self, parser) -> None:
         """ Configure the parser for this command. """
@@ -35,15 +33,6 @@ class RunActionCommand(Command):
                                  'If no asset is specified, the given action will run on all possible assets')
         parser.add_argument('--parameters', nargs='+',
                             help='List of parameter/value pairs in the format param1:value1 param2:value2')
-
-    def check_authorization(self) -> bool:
-        """ Return True if authorized to run command. """
-        if self.slack_bot.permit_playbook:
-            logging.debug('**Command: "%s" is permitted', self.COMMAND_NAME)
-            return True
-
-        logging.debug('**Command: "%s" is not permitted', self.COMMAND_NAME)
-        return False
 
     def _process_args(self, parsed_args):
         """ Parse the specified command string. """

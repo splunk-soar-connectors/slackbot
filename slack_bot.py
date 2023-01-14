@@ -29,8 +29,9 @@ import urllib3
 from slack_bolt import App as slack_app
 from slack_bolt.adapter.socket_mode import SocketModeHandler
 
+from commands.get_action import GetActionCommand
 from commands.get_container import GetContainerCommand
-from commands.list import ListCommand
+from commands.get_playbook import GetPlaybookCommand
 from commands.run_action import RunActionCommand
 from commands.run_playbook import RunPlaybookCommand
 from slack_bot_consts import *
@@ -44,9 +45,10 @@ if os.path.exists(f'{app_dir}/dependencies'):
 
 
 AVAILABLE_COMMANDS = sorted([
-    GetContainerCommand,
-    ListCommand,
+    GetActionCommand,
     RunActionCommand,
+    GetContainerCommand,
+    GetPlaybookCommand,
     RunPlaybookCommand,
 ], key=lambda command: command.COMMAND_NAME)
 
@@ -151,14 +153,14 @@ class App():
 class SlackBot(object):
 
     def __init__(self, bot_token, socket_token, bot_id, base_url='https://127.0.0.1/', verify=False, auth_token='',
-                 permit_act=False, permit_playbook=False, permit_container=False, permit_list=False, permitted_users='', auth_basic=()):
+                 command_permissions=None, permitted_users='', auth_basic=()):
         """ This should be changed to some kind of load config thing """
+        if command_permissions is None:
+            command_permissions = {}
+
         self.bot_token = bot_token
         self.socket_token = socket_token
-        self.permit_act = permit_act
-        self.permit_playbook = permit_playbook
-        self.permit_container = permit_container
-        self.permit_list = permit_list
+        self.command_permissions = command_permissions
         self.permitted_users = permitted_users
         self.headers = {} if not auth_token else {'ph-auth-token': auth_token}
         self.cmd_start = f'<@{bot_id}>'
@@ -168,6 +170,13 @@ class SlackBot(object):
         self.base_url = base_url
         self.phantom_url = base_url
         self._generate_dicts()
+
+    @staticmethod
+    def _create_query_string(value) -> str:
+        if value is None:
+            return None
+
+        return f'"{value}"'
 
     def _soar_get(self, endpoint: SoarRestEndpoint, query_parameters: dict = None, path_postfix: str = ''):
         """ Make a SOAR GET request. """
@@ -628,10 +637,8 @@ def main():  # noqa
         bot_token = state.get(SLACK_BOT_JSON_BOT_TOKEN)
         socket_token = state.get(SLACK_BOT_JSON_SOCKET_TOKEN)
         soar_auth_token = state.get(SLACK_BOT_JSON_SOAR_AUTH_TOKEN)
-        permit_act = state.get(SLACK_BOT_JSON_PERMIT_BOT_ACT)
-        permit_playbook = state.get(SLACK_BOT_JSON_PERMIT_BOT_PLAYBOOK)
-        permit_container = state.get(SLACK_BOT_JSON_PERMIT_BOT_CONTAINER)
-        permit_list = state.get(SLACK_BOT_JSON_PERMIT_BOT_LIST)
+        command_permissions = {permission: state.get(permission.value, False)
+                               for permission in CommandPermission}
         permitted_users = state.get(SLACK_BOT_JSON_PERMITTED_USERS)
         log_level = state.get(SLACK_BOT_JSON_LOG_LEVEL)
         logging.getLogger().setLevel(log_level)
@@ -663,10 +670,7 @@ def main():  # noqa
             bot_id=bot_id,
             base_url=ph_base_url,
             auth_token=soar_auth_token,
-            permit_act=permit_act,
-            permit_playbook=permit_playbook,
-            permit_container=permit_container,
-            permit_list=permit_list,
+            command_permissions=command_permissions,
             permitted_users=permitted_users
         )
         sb._from_on_poll()

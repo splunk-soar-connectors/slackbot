@@ -26,6 +26,7 @@ class SoarRestEndpoint(str, Enum):
     APP_RUNS = 'action_run/{}/app_runs'
     BUILD_ACTION = 'build_action'
     CONTAINER = 'container'
+    PLAYBOOK = 'playbook'
     PLAYBOOK_RUN = 'playbook_run'
     SYSTEM_INFO = 'system_info'
 
@@ -40,6 +41,20 @@ class SoarRestEndpoint(str, Enum):
         return f'{base_url}/{self.path}'
 
 
+class CommandPermission(Enum):
+    """
+    Slack Bot Command Permissions.
+
+    The name should match the command names (besides case).
+    The value should match the asset configuration name of the permission.
+    """
+    GET_ACTION = 'permit_bot_get_action'
+    RUN_ACTION = 'permit_bot_run_action'
+    GET_PLAYBOOK = 'permit_bot_get_playbook'
+    RUN_PLAYBOOK = 'permit_bot_run_playbook'
+    GET_CONTAINER = 'permit_bot_get_container'
+
+
 # Action IDs
 ACTION_ID_TEST_CONNECTIVITY = 'test_connectivity'
 ACTION_ID_START_BOT = 'start_bot'
@@ -51,10 +66,6 @@ SLACK_BASE_URL = 'https://slack.com/api/'
 SLACK_BOT_JSON_BOT_TOKEN = 'bot_token'
 SLACK_BOT_JSON_SOAR_AUTH_TOKEN = 'soar_auth_token'
 SLACK_BOT_JSON_SOCKET_TOKEN = 'socket_token'
-SLACK_BOT_JSON_PERMIT_BOT_ACT = 'permit_bot_act'
-SLACK_BOT_JSON_PERMIT_BOT_PLAYBOOK = 'permit_bot_playbook'
-SLACK_BOT_JSON_PERMIT_BOT_CONTAINER = 'permit_bot_container'
-SLACK_BOT_JSON_PERMIT_BOT_LIST = 'permit_bot_list'
 SLACK_BOT_JSON_PERMITTED_USERS = 'permitted_bot_users'
 SLACK_BOT_JSON_LOG_LEVEL = 'log_level'
 SLACK_BOT_JSON_MESSAGE_LIMIT = 4000
