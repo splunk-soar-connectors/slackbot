@@ -28,7 +28,7 @@ class GetPlaybookCommand(Command):
     def configure_parser(self, parser) -> None:
         """ Configure the parser for this command. """
         parser.add_argument('--name', help='The playbook name to filter on. Case insensitive')
-        parser.add_argument('--status', type=str.lower, choices=['Active', 'Inactive', 'Draft'],
+        parser.add_argument('--status', choices=['active', 'inactive', 'draft'], type=str.lower,
                             help='The playbook status to filter on')
         parser.add_argument('--type', dest='playbook_type',
                             help='The playbook type to filter on. Case insensitive')
@@ -63,7 +63,7 @@ class GetPlaybookCommand(Command):
             'order': parsed_args.sort_order,
             '_filter_name__icontains': self.slack_bot._create_query_string(getattr(parsed_args, 'name', None)),
             '_filter_active': active_filter,
-            '_filter_draft': draft_filter,
+            '_filter_draft_mode': draft_filter,
             '_filter_playbook_type__icontains':
                 self.slack_bot._create_query_string(getattr(parsed_args, 'playbook_type', None)),
             '_filter_scm__name': self.slack_bot._create_query_string(getattr(parsed_args, 'repo', None)),
