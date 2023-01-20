@@ -21,6 +21,7 @@ class RunActionCommand(Command):
     """ Run Action Command. """
 
     COMMAND_NAME = 'run_action'
+    COMMAND_DESCRIPTION = 'Run an app action'
 
     def configure_parser(self, parser) -> None:
         """ Configure the parser for this command. """

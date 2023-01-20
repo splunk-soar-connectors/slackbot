@@ -29,6 +29,7 @@ import urllib3
 from slack_bolt import App as slack_app
 from slack_bolt.adapter.socket_mode import SocketModeHandler
 
+from commands.debug import DebugCommand
 from commands.get_action import GetActionCommand
 from commands.get_container import GetContainerCommand
 from commands.get_playbook import GetPlaybookCommand
@@ -45,6 +46,7 @@ if os.path.exists(f'{app_dir}/dependencies'):
 
 
 AVAILABLE_COMMANDS = sorted([
+    DebugCommand,
     GetActionCommand,
     RunActionCommand,
     GetContainerCommand,
@@ -153,11 +155,12 @@ class App():
 class SlackBot(object):
 
     def __init__(self, bot_token, socket_token, bot_id, base_url='https://127.0.0.1/', verify=False, auth_token='',
-                 command_permissions=None, permitted_users='', auth_basic=()):
+                 command_permissions=None, permitted_users='', auth_basic=(), app_version=''):
         """ This should be changed to some kind of load config thing """
         if command_permissions is None:
             command_permissions = {}
 
+        self.app_version = app_version
         self.bot_token = bot_token
         self.socket_token = socket_token
         self.command_permissions = command_permissions
@@ -586,8 +589,8 @@ class SlackBot(object):
         parser = argparse.ArgumentParser(exit_on_error=False,
                                          prog='@<bot_username>',
                                          formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-        subparsers = parser.add_subparsers(title='commands')
 
+        subparsers = parser.add_subparsers(title='commands')
         for slack_bot_command in AVAILABLE_COMMANDS:
             subparser = subparsers.add_parser(slack_bot_command.COMMAND_NAME,
                                               description=slack_bot_command.COMMAND_DESCRIPTION,
@@ -632,6 +635,7 @@ def main():  # noqa
 
         asset_id = sys.argv[1]
         state = _load_app_state(asset_id)
+        app_version = state.get('app_version')
         bot_id = state.get('bot_id')
         ph_base_url = state.get('ph_base_url')
         bot_token = state.get(SLACK_BOT_JSON_BOT_TOKEN)
@@ -671,7 +675,8 @@ def main():  # noqa
             base_url=ph_base_url,
             auth_token=soar_auth_token,
             command_permissions=command_permissions,
-            permitted_users=permitted_users
+            permitted_users=permitted_users,
+            app_version=app_version,
         )
         sb._from_on_poll()
         sys.exit(0)

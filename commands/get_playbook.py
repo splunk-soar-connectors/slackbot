@@ -1,4 +1,4 @@
-# File: list.py
+# File: get_playbook.py
 #
 # Copyright (c) 2023 Splunk Inc.
 #
@@ -24,6 +24,7 @@ class GetPlaybookCommand(Command):
     """ Get Playbook Command. """
 
     COMMAND_NAME = 'get_playbook'
+    COMMAND_DESCRIPTION = 'Query for playbooks. Only playbooks matching ALL specified filters will be returned (AND)'
 
     def configure_parser(self, parser) -> None:
         """ Configure the parser for this command. """

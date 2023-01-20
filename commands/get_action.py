@@ -1,4 +1,4 @@
-# File: list.py
+# File: get_action.py
 #
 # Copyright (c) 2023 Splunk Inc.
 #
@@ -24,6 +24,7 @@ class GetActionCommand(Command):
     """ Get Action Command. """
 
     COMMAND_NAME = 'get_action'
+    COMMAND_DESCRIPTION = 'Query for actions. Only actions matching ALL specified filters will be returned (AND)'
 
     def configure_parser(self, parser) -> None:
         """ Configure the parser for this command. """

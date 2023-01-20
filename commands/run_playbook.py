@@ -21,6 +21,7 @@ class RunPlaybookCommand(Command):
     """ Run Playbook Command. """
 
     COMMAND_NAME = 'run_playbook'
+    COMMAND_DESCRIPTION = 'Run a playbook'
 
     def configure_parser(self, parser) -> None:
         """ Configure the parser for this command. """
