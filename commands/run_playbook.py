@@ -15,6 +15,7 @@
 
 import slack_bot_consts as constants
 from commands.command import Command
+from utils.result import FailureResult, Result, SuccessResult
 
 
 class RunPlaybookCommand(Command):
@@ -25,37 +26,36 @@ class RunPlaybookCommand(Command):
 
     def configure_parser(self, parser) -> None:
         """ Configure the parser for this command. """
-        parser.add_argument('--repo',
-                            help='Name of the repo the playbook is in '
-                                '(required if playbook argument is a name, and not an ID)')
-        parser.add_argument('playbook', help='Name or ID of the playbook to run')
         parser.add_argument('container', help='ID of container to run playbook on')
+        playbook_group = parser.add_mutually_exclusive_group(required=True)
+        playbook_group.add_argument('-n', '--name', help='Name of the playbook to run')
+        playbook_group.add_argument('-i', '--id', dest='playbook_id', type=int,
+                                    help='ID of the playbook to run')
+        parser.add_argument('-r', '--repo',
+                            help='Name of the repo the playbook is in '
+                                 '(required if playbook argument is a name, and not an ID)')
 
-    def _process_args(self, parsed_args):
+    def _process_args(self, parsed_args) -> Result:
         request_body = {}
         request_body['run'] = True
         request_body['container_id'] = parsed_args.container
 
-        # Check to see if its a numeric ID
-        try:
-            playbook = int(parsed_args.playbook)
-        except Exception:
-            if not parsed_args.repo:
-                return False, 'repo argument is required when supplying playbook name instead of playbook ID'
+        playbook_id = getattr(parsed_args, 'playbook_id', None)
+        if not playbook_id:
+            if not hasattr(parsed_args, 'repo'):
+                return FailureResult('repo argument is required when supplying playbook name instead of playbook ID')
+            playbook_id = f'{parsed_args.repo}/{parsed_args.playbook}'
 
-            playbook = f'{parsed_args.repo}/{parsed_args.playbook}'
-
-        request_body['playbook_id'] = playbook
-
-        return True, request_body
+        request_body['playbook_id'] = playbook_id
+        return SuccessResult(request_body)
 
     def execute(self, parsed_args) -> str:
         """ Execute the command with the specified arguments and return a message of the result. """
-        success, result = self._process_args(parsed_args)
-        if not success:
-            return result
+        request_body_result = self._process_args(parsed_args)
+        if not request_body_result.success:
+            return request_body_result.message
 
-        request_body = result
+        request_body = request_body_result.result
         try:
             playbook_run_request = self.slack_bot._soar_post(constants.SoarRestEndpoint.PLAYBOOK_RUN,
                                                              body=request_body)
@@ -78,4 +78,6 @@ class RunPlaybookCommand(Command):
 
         self.slack_bot._post_message(f'Container URL: {container_url}', self.channel, code_block=False)
 
-        return f'Playbook: {playbook_id}\nPlaybook run ID: {resp["playbook_run_id"]}\nPlaybook queueing result: Playbook run successfully queued'
+        return '\n'.join([f'Playbook: {playbook_id}',
+                          f'Playbook run ID: {run_id}',
+                          'Playbook queueing result: Playbook run successfully queued'])

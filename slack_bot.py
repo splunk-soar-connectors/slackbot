@@ -605,22 +605,33 @@ class SlackBot(object):
     def _handle_command(self, command, channel):
         parser = self._create_parser(channel)
 
-        argparse_output = None
+        argparse_output_io = StringIO()
+        argparse_errors_io = StringIO()
         try:
-            # argparse writes to stdout, so we need to capture it
-            sys.stdout = argparse_output = StringIO()
+            # argparse writes to stdout and stderr, so we need to capture them
+            sys.stdout = argparse_output_io
+            sys.stderr = argparse_errors_io
             args = parser.parse_args(shlex.split(command))
-        except:  # noqa: We also want to catch SystemError exceptions from argparse
-            if argparse_output is not None:
-                self._post_message(f'Could not parse arguments:\n\n{argparse_output.getvalue()}', channel)
+        except (Exception, SystemExit) as e:
+            # argparse sometimes also raises SystemExit exceptions despite the false exit_on_error flag
+            sys.stdout = sys.__stdout__
+            sys.stderr = sys.__stderr__
+
+            argparse_output = argparse_output_io.getvalue()
+            argparse_errors = argparse_errors_io.getvalue()
+            if argparse_errors:
+                self._post_message(f'Could not parse arguments:\n\n{argparse_errors}', channel)
+            elif argparse_output:
+                self._post_message(f'Could not parse arguments:\n\n{argparse_output}', channel)
+            elif hasattr(e, 'message'):
+                self._post_message(f'Could not parse arguments:\n\n{e.message}', channel)
             else:
                 logging.exception('No output found from failed argument parsing attempt.')
-                self._post_message('Unknown error encountered while parsing arguments. '
-                                    'Check the app log to see the detailed exception.', channel)
+                self._post_message('Could not parse arguments:\n\nUnknown error. Check the app logs.', channel)
             return
         finally:
-            # Reset stdout back to normal
             sys.stdout = sys.__stdout__
+            sys.stderr = sys.__stderr__
 
         result_message = args.func(args)
         self._post_message(result_message, channel)
