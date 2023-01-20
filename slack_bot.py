@@ -194,7 +194,7 @@ class SlackBot(object):
 
     def _soar_post(self, endpoint: SoarRestEndpoint, body: dict = None):
         """ Make a SOAR POST request. """
-        url = endpoint.url(self.base_url),
+        url = endpoint.url(self.base_url)
 
         logging.debug('Sending POST request to SOAR URL: %s', url)
         return requests.post(url,
@@ -619,15 +619,17 @@ class SlackBot(object):
 
             argparse_output = argparse_output_io.getvalue()
             argparse_errors = argparse_errors_io.getvalue()
+
+            failed_parsing_prefix = 'Could not parse arguments:'
             if argparse_errors:
-                self._post_message(f'Could not parse arguments:\n\n{argparse_errors}', channel)
+                self._post_message(f'{failed_parsing_prefix}\n\n{argparse_errors}', channel)
             elif argparse_output:
-                self._post_message(f'Could not parse arguments:\n\n{argparse_output}', channel)
+                self._post_message(f'{failed_parsing_prefix}\n\n{argparse_output}', channel)
             elif hasattr(e, 'message'):
-                self._post_message(f'Could not parse arguments:\n\n{e.message}', channel)
+                self._post_message(f'{failed_parsing_prefix}\n\n{e.message}', channel)
             else:
                 logging.exception('No output found from failed argument parsing attempt.')
-                self._post_message('Could not parse arguments:\n\nUnknown error. Check the app logs.', channel)
+                self._post_message(f'{failed_parsing_prefix}\n\nUnknown error. Check the app logs.', channel)
             return
         finally:
             sys.stdout = sys.__stdout__

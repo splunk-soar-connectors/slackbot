@@ -44,7 +44,7 @@ class RunPlaybookCommand(Command):
         if not playbook_id:
             if not hasattr(parsed_args, 'repo'):
                 return FailureResult('repo argument is required when supplying playbook name instead of playbook ID')
-            playbook_id = f'{parsed_args.repo}/{parsed_args.playbook}'
+            playbook_id = f'{parsed_args.repo}/{parsed_args.name}'
 
         request_body['playbook_id'] = playbook_id
         return SuccessResult(request_body)
