@@ -15,7 +15,7 @@
 import logging
 
 import slack_bot_consts as constants
-from slack_bot_consts import CommandPermission
+from slack_bot_enums import CommandPermission
 
 
 class Command():

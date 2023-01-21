@@ -15,8 +15,8 @@
 
 import logging
 
-import slack_bot_consts as constants
 from commands.command import Command
+from slack_bot_enums import SoarRestEndpoint
 from utils.result import FailureResult, Result, SuccessResult
 
 
@@ -60,8 +60,8 @@ class GetActionCommand(Command):
         query_parameters = {key: value for key, value in query_parameters.items() if value is not None}
 
         try:
-            get_action_request = self.slack_bot._soar_get(constants.SoarRestEndpoint.APP_ACTION,
-                                                             query_parameters=query_parameters)
+            get_action_request = self.slack_bot._soar_get(SoarRestEndpoint.APP_ACTION,
+                                                          query_parameters=query_parameters)
             get_action_request.raise_for_status()
             action_info = get_action_request.json()
         except Exception as e:

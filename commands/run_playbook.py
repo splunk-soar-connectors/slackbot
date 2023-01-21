@@ -13,8 +13,8 @@
 # either express or implied. See the License for the specific language governing permissions
 # and limitations under the License.
 
-import slack_bot_consts as constants
 from commands.command import Command
+from slack_bot_enums import SoarRestEndpoint
 from utils.result import FailureResult, Result, SuccessResult
 
 
@@ -57,7 +57,7 @@ class RunPlaybookCommand(Command):
 
         request_body = request_body_result.result
         try:
-            playbook_run_request = self.slack_bot._soar_post(constants.SoarRestEndpoint.PLAYBOOK_RUN,
+            playbook_run_request = self.slack_bot._soar_post(SoarRestEndpoint.PLAYBOOK_RUN,
                                                              body=request_body)
             resp = playbook_run_request.json()
         except Exception as e:

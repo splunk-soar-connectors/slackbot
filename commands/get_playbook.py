@@ -15,8 +15,8 @@
 
 import logging
 
-import slack_bot_consts as constants
 from commands.command import Command
+from slack_bot_enums import SoarRestEndpoint
 from utils.result import FailureResult, Result, SuccessResult
 
 
@@ -73,8 +73,8 @@ class GetPlaybookCommand(Command):
         query_parameters = {key: value for key, value in query_parameters.items() if value is not None}
 
         try:
-            get_playbook_request = self.slack_bot._soar_get(constants.SoarRestEndpoint.PLAYBOOK,
-                                                             query_parameters=query_parameters)
+            get_playbook_request = self.slack_bot._soar_get(SoarRestEndpoint.PLAYBOOK,
+                                                            query_parameters=query_parameters)
             get_playbook_request.raise_for_status()
             playbook_info = get_playbook_request.json()
         except Exception as e:

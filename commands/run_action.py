@@ -14,8 +14,8 @@
 # and limitations under the License.
 import logging
 
-import slack_bot_consts as constants
 from commands.command import Command
+from slack_bot_enums import SoarRestEndpoint
 from utils.result import FailureResult, Result, SuccessResult
 
 
@@ -59,8 +59,8 @@ class RunActionCommand(Command):
         query_parameters = {key: value for key, value in query_parameters.items() if value is not None}
 
         try:
-            get_action_request = self.slack_bot._soar_get(constants.SoarRestEndpoint.APP_ACTION,
-                                                             query_parameters=query_parameters)
+            get_action_request = self.slack_bot._soar_get(SoarRestEndpoint.APP_ACTION,
+                                                          query_parameters=query_parameters)
             get_action_request.raise_for_status()
             action_info = get_action_request.json()
         except Exception as e:
@@ -80,7 +80,7 @@ class RunActionCommand(Command):
         query_parameters = {key: value for key, value in query_parameters.items() if value is not None}
 
         try:
-            get_asset_request = self.slack_bot._soar_get(constants.SoarRestEndpoint.ASSET,
+            get_asset_request = self.slack_bot._soar_get(SoarRestEndpoint.ASSET,
                                                          query_parameters=query_parameters)
             get_asset_request.raise_for_status()
             asset_info = get_asset_request.json()
@@ -199,7 +199,7 @@ class RunActionCommand(Command):
 
         request_body = result.result
         try:
-            action_run_request = self.slack_bot._soar_post(constants.SoarRestEndpoint.ACTION_RUN,
+            action_run_request = self.slack_bot._soar_post(SoarRestEndpoint.ACTION_RUN,
                                                            body=request_body)
             response = action_run_request.json()
         except Exception as e:

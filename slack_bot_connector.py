@@ -29,6 +29,7 @@ from django.http import HttpResponse
 from phantom.base_connector import APPS_STATE_PATH
 
 from slack_bot_consts import *
+from slack_bot_enums import CommandPermission, SoarRestEndpoint
 
 
 class RetVal(tuple):

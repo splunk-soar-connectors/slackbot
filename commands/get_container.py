@@ -15,8 +15,8 @@
 
 import logging
 
-import slack_bot_consts as constants
 from commands.command import Command
+from slack_bot_enums import SoarRestEndpoint
 from utils.result import FailureResult, Result, SuccessResult
 
 
@@ -69,7 +69,7 @@ class GetContainerCommand(Command):
         query_parameters = {key: value for key, value in query_parameters.items() if value is not None}
 
         try:
-            get_container_request = self.slack_bot._soar_get(constants.SoarRestEndpoint.CONTAINER,
+            get_container_request = self.slack_bot._soar_get(SoarRestEndpoint.CONTAINER,
                                                              query_parameters=query_parameters)
             get_container_request.raise_for_status()
             container_info = get_container_request.json()
