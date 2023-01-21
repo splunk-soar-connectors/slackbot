@@ -1,4 +1,4 @@
-# File: command.py
+# File: sb_command.py
 #
 # Copyright (c) 2023 Splunk Inc.
 #

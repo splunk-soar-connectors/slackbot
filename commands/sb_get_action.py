@@ -1,4 +1,4 @@
-# File: get_action.py
+# File: sb_get_action.py
 #
 # Copyright (c) 2023 Splunk Inc.
 #
@@ -17,7 +17,7 @@ import logging
 
 from commands.sb_command import Command
 from slack_bot_enums import SoarRestEndpoint
-from utils.result import FailureResult, Result, SuccessResult
+from utils.sb_result import FailureResult, Result, SuccessResult
 
 
 class GetActionCommand(Command):

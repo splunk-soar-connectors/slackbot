@@ -37,7 +37,7 @@ from commands.sb_run_action import RunActionCommand
 from commands.sb_run_playbook import RunPlaybookCommand
 from slack_bot_consts import *
 from slack_bot_enums import CommandPermission, SoarRestEndpoint
-from utils.result import FailureResult, Result, SuccessResult
+from utils.sb_result import FailureResult, Result, SuccessResult
 
 urllib3.disable_warnings()
 

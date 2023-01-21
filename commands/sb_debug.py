@@ -1,4 +1,4 @@
-# File: debug.py
+# File: sb_debug.py
 #
 # Copyright (c) 2023 Splunk Inc.
 #

@@ -1,4 +1,4 @@
-# File: run_playbook.py
+# File: sb_run_playbook.py
 #
 # Copyright (c) 2023 Splunk Inc.
 #
@@ -15,7 +15,7 @@
 
 from commands.sb_command import Command
 from slack_bot_enums import SoarRestEndpoint
-from utils.result import FailureResult, Result, SuccessResult
+from utils.sb_result import FailureResult, Result, SuccessResult
 
 
 class RunPlaybookCommand(Command):
