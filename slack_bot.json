@@ -41,30 +41,30 @@
             "data_type": "password",
             "description": "Socket Token",
             "required": true,
-            "order": 2
+            "order": 1
         },
         "soar_auth_token": {
             "data_type": "password",
             "description": "Automation User Auth Token",
             "required": true,
-            "order": 3
+            "order": 2
         },
         "timeout": {
             "description": "Question timeout (in minutes)",
             "data_type": "numeric",
             "default": 30,
-            "order": 4
+            "order": 3
         },
         "response_poll_interval": {
             "description": "How often to poll for a response (in seconds)",
             "data_type": "numeric",
             "default": 30,
-            "order": 5
+            "order": 4
         },
         "log_level": {
             "description": "The log level for the bot",
             "data_type": "string",
-            "order": 6,
+            "order": 5,
             "value_list": [
                 "DEBUG",
                 "INFO",
@@ -76,32 +76,32 @@
         "permit_bot_get_action": {
             "description": "Permit 'get_action' command",
             "data_type": "boolean",
-            "order": 7
+            "order": 6
         },
         "permit_bot_run_action": {
             "description": "Permit 'run_action' command",
             "data_type": "boolean",
-            "order": 8
+            "order": 7
         },
         "permit_bot_get_playbook": {
             "description": "Permit 'get_playbook' command",
             "data_type": "boolean",
-            "order": 9
+            "order": 8
         },
         "permit_bot_run_playbook": {
             "description": "Permit 'run_playbook' command",
             "data_type": "boolean",
-            "order": 10
+            "order": 9
         },
         "permit_bot_get_container": {
             "description": "Permit 'get_container' command",
             "data_type": "boolean",
-            "order": 11
+            "order": 10
         },
         "permitted_bot_users": {
             "description": "Users permitted to use bot commands. Comma seperated list of Member IDs. Leave blank to allow all users (default)",
             "data_type": "string",
-            "order": 12
+            "order": 11
         }
     },
     "actions": [
