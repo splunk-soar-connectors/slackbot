@@ -29,12 +29,12 @@ import urllib3
 from slack_bolt import App as slack_app
 from slack_bolt.adapter.socket_mode import SocketModeHandler
 
-from commands.debug import DebugCommand
-from commands.get_action import GetActionCommand
-from commands.get_container import GetContainerCommand
-from commands.get_playbook import GetPlaybookCommand
-from commands.run_action import RunActionCommand
-from commands.run_playbook import RunPlaybookCommand
+from commands.sb_debug import DebugCommand
+from commands.sb_get_action import GetActionCommand
+from commands.sb_get_container import GetContainerCommand
+from commands.sb_get_playbook import GetPlaybookCommand
+from commands.sb_run_action import RunActionCommand
+from commands.sb_run_playbook import RunPlaybookCommand
 from slack_bot_consts import *
 from slack_bot_enums import CommandPermission, SoarRestEndpoint
 from utils.result import FailureResult, Result, SuccessResult

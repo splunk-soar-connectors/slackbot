@@ -14,7 +14,7 @@
 # and limitations under the License.
 import logging
 
-from commands.command import Command
+from commands.sb_command import Command
 from slack_bot_enums import SoarRestEndpoint
 from utils.result import FailureResult, Result, SuccessResult
 

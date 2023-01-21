@@ -15,7 +15,7 @@
 
 import os
 
-from commands.command import Command
+from commands.sb_command import Command
 
 
 class DebugCommand(Command):

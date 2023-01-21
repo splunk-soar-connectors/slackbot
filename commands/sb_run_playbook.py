@@ -13,7 +13,7 @@
 # either express or implied. See the License for the specific language governing permissions
 # and limitations under the License.
 
-from commands.command import Command
+from commands.sb_command import Command
 from slack_bot_enums import SoarRestEndpoint
 from utils.result import FailureResult, Result, SuccessResult
 

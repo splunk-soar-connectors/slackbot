@@ -18,7 +18,7 @@ import slack_bot_consts as constants
 from slack_bot_enums import CommandPermission
 
 
-class Command():
+class Command:
     """ Slack Bot command base class. """
 
     COMMAND_NAME: str = None
