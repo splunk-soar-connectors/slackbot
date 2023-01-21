@@ -1,4 +1,4 @@
-# File: slack_bot_consts.py
+# File: slack_bot_enums.py
 #
 # Copyright (c) 2023 Splunk Inc.
 #
