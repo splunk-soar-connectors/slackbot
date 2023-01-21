@@ -50,7 +50,7 @@ class GetContainerCommand(Command):
                             help='The sort order to use')
         parser.add_argument('--limit', default=10, type=int,
                             help='The number of results to show. Specify 0 to show all results')
-        parser.add_argument('--short', default=False, action='store_true',
+        parser.add_argument('-s', '--short', default=False, action='store_true',
                             help='If specified, prints the output in a compact format')
 
     def _query_containers(self, parsed_args) -> Result:

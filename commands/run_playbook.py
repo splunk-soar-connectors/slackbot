@@ -26,7 +26,7 @@ class RunPlaybookCommand(Command):
 
     def configure_parser(self, parser) -> None:
         """ Configure the parser for this command. """
-        parser.add_argument('container', help='ID of container to run playbook on')
+        parser.add_argument('container', type=int, help='ID of container to run playbook on')
         playbook_group = parser.add_mutually_exclusive_group(required=True)
         playbook_group.add_argument('-n', '--name', help='Name of the playbook to run')
         playbook_group.add_argument('-i', '--id', dest='playbook_id', type=int,

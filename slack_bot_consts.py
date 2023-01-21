@@ -24,6 +24,7 @@ class SoarRestEndpoint(str, Enum):
     APP_ACTION = 'app_action'
     APP_RUN = 'app_run'
     APP_RUNS = 'action_run/{}/app_runs'
+    ASSET = 'asset'
     BUILD_ACTION = 'build_action'
     CONTAINER = 'container'
     PLAYBOOK = 'playbook'

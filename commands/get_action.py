@@ -37,8 +37,11 @@ class GetActionCommand(Command):
                             help='The sort order to use')
         parser.add_argument('--limit', default=10, type=int,
                             help='The number of results to show. Specify 0 to show all results')
-        parser.add_argument('--short', default=False, action='store_true',
-                            help='If specified, prints the output in a compact format')
+        verbosity_group = parser.add_mutually_exclusive_group(required=False)
+        verbosity_group.add_argument('-s', '--short', default=False, action='store_true',
+                                     help='If specified, prints the output in a compact format')
+        verbosity_group.add_argument('-v', '--verbose', default=False, action='store_true',
+                                     help='If specified, prints extra information about actions')
 
     def _query_actions(self, parsed_args) -> Result:
         sort_filter = parsed_args.sort_by
@@ -66,6 +69,18 @@ class GetActionCommand(Command):
 
         return SuccessResult(action_info)
 
+    def _format_parameter(self, name, info) -> str:
+        data_type = info.get('data_type', 'Unknown')
+        required = info.get('required', False)
+        description = info.get('description', '')
+        lines = [
+            f'  {name}',
+            f'    Data Type: {data_type}',
+            f'    Required: {required}',
+            f'    Description: {description}',
+        ]
+        return '\n'.join(lines)
+
     def execute(self, parsed_args) -> str:
         """ Execute the command with the specified arguments and return a message of the result. """
         action_info_result = self._query_actions(parsed_args)
@@ -78,6 +93,19 @@ class GetActionCommand(Command):
 
         message_list = []
         message_list.append(f'Found {num_actions_found} matching action{actions_suffix}:')
+
+        app_ids = [info['app'] for info in action_info['data']]
+
+        apps_by_app_id_result = self.slack_bot._get_apps_by_app_ids(app_ids)
+        if not apps_by_app_id_result.success:
+            return apps_by_app_id_result.message
+        apps_by_app_id = apps_by_app_id_result.result
+
+        assets_by_app_id_result = self.slack_bot._get_assets_by_app_ids(app_ids)
+        if not assets_by_app_id_result.success:
+            return assets_by_app_id_result.message
+        assets_by_app_id = assets_by_app_id_result.result
+
         for action in action_info['data']:
             action_name = None
             try:
@@ -85,18 +113,26 @@ class GetActionCommand(Command):
                 action_description = action['description']
                 action_type = action['type']
                 app_id = action['app']
+                app_name = apps_by_app_id[app_id]['name']
+                asset_names = ', '.join(sorted(asset['name'] for asset in assets_by_app_id[app_id]))
                 if parsed_args.short:
                     short_message_list = [
                         f'Name: {action_name}'.ljust(20),
-                        f'App ID: {app_id}'.ljust(14),
+                        f'App Name: {app_name}'.ljust(20),
                         f'Description: {action_description}',
                     ]
                     message_list.append(' '.join(short_message_list))
                 else:
                     message_list.append(f'Name: {action_name}')
                     message_list.append(f'Type: {action_type}')
+                    message_list.append(f'App Name: {app_name}')
                     message_list.append(f'App ID: {app_id}')
                     message_list.append(f'Description: {action_description}')
+                    message_list.append(f'Assets: {asset_names}')
+                    if parsed_args.verbose:
+                        message_list.append('Parameters:')
+                        for parameter_name, parameter_info in action.get('parameters', {}).items():
+                            message_list.append(self._format_parameter(parameter_name, parameter_info))
                     message_list.append('')
             except Exception:
                 failure_message = f'Could not parse action info for action {action_name}'

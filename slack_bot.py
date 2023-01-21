@@ -36,6 +36,7 @@ from commands.get_playbook import GetPlaybookCommand
 from commands.run_action import RunActionCommand
 from commands.run_playbook import RunPlaybookCommand
 from slack_bot_consts import *
+from utils.result import FailureResult, Result, SuccessResult
 
 urllib3.disable_warnings()
 
@@ -61,6 +62,11 @@ def create_query_string(query_parameters):
         return ''
 
     return '?' + '&'.join(f'{key}={value}' for key, value in query_parameters.items())
+
+
+def dedupe(list_to_dedupe):
+    """ Return the input list without any duplicates. """
+    return list(dict.fromkeys(list_to_dedupe))
 
 
 def _load_app_state(asset_id):
@@ -106,52 +112,6 @@ def decrypt_state(asset_id, decrypt_var, token_name):
     return encryption_helper.decrypt(decrypt_var, asset_id)
 
 
-class Action():
-
-    def __init__(self, name, action_id, app):
-
-        self.name = name
-        self.action_id = action_id
-        self.app = app
-        self.assets = []
-        self.parameters = {}
-
-    def add_parameters(self, params):
-
-        for param_name, param_dict in params.items():
-
-            required = param_dict.get('required', False)
-            data_type = param_dict['data_type']
-
-            self.parameters[param_name] = Parameter(param_name, required, data_type)
-
-
-class Parameter():
-
-    def __init__(self, name, required, data_type):
-
-        self.name = name
-        self.required = required
-        self.data_type = data_type
-
-
-class Asset():
-
-    def __init__(self, name, asset_id, apps):
-
-        self.name = name
-        self.asset_id = asset_id
-        self.apps = apps
-
-
-class App():
-
-    def __init__(self, name, app_id):
-
-        self.name = name
-        self.app_id = app_id
-
-
 class SlackBot(object):
 
     def __init__(self, bot_token, socket_token, bot_id, base_url='https://127.0.0.1/', verify=False, auth_token='',
@@ -172,7 +132,6 @@ class SlackBot(object):
         base_url += '/' if not base_url.endswith('/') else ''
         self.base_url = base_url
         self.phantom_url = base_url
-        self._generate_dicts()
 
     @staticmethod
     def _create_query_string(value) -> str:
@@ -204,157 +163,53 @@ class SlackBot(object):
                              verify=self.verify,
                              timeout=SLACK_BOT_DEFAULT_TIMEOUT)
 
-    def _generate_dicts(self):
-        """
-        In order to easily keep track of and verify actions
-        phantom.bot creates a couple of dictionaries
-        """
-        self.app_dict = {}
-        self.asset_dict = {}
-        self.app_to_asset_dict = {}
+    def _get_apps_by_app_ids(self, app_ids) -> Result:
+        """ Return information for the specified app IDs. """
+        app_ids = dedupe(app_ids)
 
-        self._create_app_dict()
-        self._create_asset_dict()
-
-    def _create_app_dict(self):
-        """ Maps app IDs and names to app objects """
+        query_parameters = {
+            'page_size': 0,
+            '_filter_id__in': app_ids,
+        }
 
         try:
-            query_parameters = {}
-            query_parameters['page_size'] = 0
-            query_parameters['pretty'] = True
-            r = self._soar_get(SoarRestEndpoint.APP, query_parameters=query_parameters)
-        except Exception:
-            return
+            get_apps_request = self._soar_get(SoarRestEndpoint.APP,
+                                              query_parameters=query_parameters)
+            get_apps_request.raise_for_status()
+            apps_info = get_apps_request.json()
+        except Exception as e:
+            failure_message = 'Failed to query for apps'
+            logging.exception(failure_message)
+            return FailureResult(f'{failure_message}: {e}')
 
-        if r.status_code != 200:
-            return
+        apps_by_id = {app_info['id']: app_info for app_info in apps_info['data']}
+        return SuccessResult(apps_by_id)
 
-        for app in r.json().get('data', []):
+    def _get_assets_by_app_ids(self, app_ids) -> Result:
+        """ Return information for the specified app IDs. """
+        app_ids = dedupe(app_ids)
 
-            app_name = app.get('name', '')
-            app_id = app.get('id')
-
-            if not (app_id and app_name):
-                continue
-
-            app_object = App(app_name, app_id)
-
-            self.app_dict[app_id] = app_object
-            self.app_dict[app_name] = app_object
-
-    def _create_asset_dict(self):
-        """
-        Maps asset IDs and names to asset objects
-        Also maps app IDs to lists of associated asset IDs
-        """
+        query_parameters = {
+            'page_size': 0,
+            '_filter_app__in': app_ids,
+        }
 
         try:
-            r = self._soar_get(SoarRestEndpoint.BUILD_ACTION)
-        except Exception:
-            return
+            get_assets_request = self._soar_get(SoarRestEndpoint.ASSET,
+                                                query_parameters=query_parameters)
+            get_assets_request.raise_for_status()
+            assets_info = get_assets_request.json()
+        except Exception as e:
+            failure_message = 'Failed to query for assets'
+            logging.exception(failure_message)
+            return FailureResult(f'{failure_message}: {e}')
 
-        if r.status_code != 200:
-            return
+        assets_by_app_id = defaultdict(list)
+        for asset_info in assets_info['data']:
+            assets_by_app_id[asset_info['app']].append(asset_info)
+        return SuccessResult(assets_by_app_id)
 
-        for asset in r.json().get('assets', []):
-
-            asset_name = asset.get('name', '')
-            asset_id = asset.get('id')
-            asset_apps = asset.get('apps', [])
-
-            if len(asset_apps) > 1:
-
-                for app_id in asset_apps:
-
-                    app = self.app_dict.get(app_id)
-
-                    if not app:
-                        asset_apps.remove(app_id)
-
-            if not (asset_id and asset_name):
-                continue
-
-            for app in asset_apps:
-
-                if app not in self.app_to_asset_dict:
-                    self.app_to_asset_dict[app] = []
-
-                self.app_to_asset_dict[app] += [asset_id]
-
-            asset_object = Asset(asset_name, asset_id, asset_apps)
-
-            self.asset_dict[asset_id] = asset_object
-            self.asset_dict[asset_name] = asset_object
-
-    def get_action_dict(self, name=None):
-        """ Return a dictionary with lists of available action objects by action name. """
-        try:
-            query_parameters = {}
-            query_parameters['page_size'] = 0
-
-            if name is not None:
-                query_parameters['_filter_action'] = f'"{name}"'
-
-            action_request = self._soar_get(SoarRestEndpoint.APP_ACTION, query_parameters=query_parameters)
-            action_request.raise_for_status()
-        except Exception:
-            logging.exception('Failed to query for actions.')
-            return []
-
-        action_dict = defaultdict(list)
-        for action in action_request.json().get('data', []):
-            action_name = action.get('action')
-            action_id = action.get('id')
-            action_app = action.get('app')
-
-            if not (action_name and action_id and action_app):
-                continue
-
-            action_object = Action(action_name, action_id, action_app)
-            action_object.add_parameters(action['parameters'])
-            action_object.assets = self.app_to_asset_dict.get(action_app, [])
-            action_dict[action_name].append(action_object)
-
-        return action_dict
-
-    def _create_container_dict(self):
-        """ Maps container IDs to container objects """
-
-        try:
-            query_parameters = {
-                'page_size': 0,
-                'sort': 'id',
-                'order': 'desc',
-            }
-            r = self._soar_get(SoarRestEndpoint.CONTAINER, query_parameters=query_parameters)
-        except Exception:
-            return None
-
-        if r.status_code != 200:
-            return None
-
-        container_dict = {}
-
-        for container in r.json().get('data', []):
-
-            container_id = container.get('id')
-
-            if not container_id:
-                continue
-
-            tags = container['tags']
-
-            for tag in tags:
-
-                if tag not in container_dict:
-                    container_dict[tag] = []
-
-                container_dict[tag].append(container_id)
-
-        return container_dict
-
-    def _sanitize(self, string):
+    def _sanitize(self, input_string):
         """ Slack quotes use those fancy UTF-8 ones that flip based on what side they are on
           " Unforunately, those cause problems, so we replace them with normal quotes
           " I'm sure there are other UTF-8 characters that will need to be replaced like this,
@@ -366,31 +221,25 @@ class SlackBot(object):
           " And in the domain case, get rid of the URL.
         """
 
-        string = (
-            string.replace('\xe2\x80\x9c', '"')
-            .replace('\xe2\x80\x9d', '"')
-            .replace('\xe2\x80\x94', '--')
-            .replace('\xe2\x80\x98', "'")
-            .replace('\xe2\x80\x99', "'")
+        sanitized_string = (
+            input_string.replace('\u2014', '--')
+                        .replace('\u2018', "'")
+                        .replace('\u2019', "'")
+                        .replace('\u201c', '"')
+                        .replace('\u201d', '"')
         )
 
-        while string.find('<') > -1 and string.find('>') > -1:
-
-            left_index = string.find('<')
-            right_index = string.find('>')
-            pipe_index = string.find('|')
-
-            if pipe_index > left_index and pipe_index < right_index:
-
-                url = string[pipe_index + 1: right_index]
-
+        while sanitized_string.find('<') > -1 and sanitized_string.find('>') > -1:
+            left_index = sanitized_string.find('<')
+            right_index = sanitized_string.find('>')
+            pipe_index = sanitized_string.find('|')
+            if left_index < pipe_index < right_index:
+                url = sanitized_string[pipe_index + 1: right_index]
             else:
+                url = sanitized_string[left_index + 1: right_index]
+            sanitized_string = sanitized_string.replace(sanitized_string[left_index: right_index + 1], url, 1)
 
-                url = string[left_index + 1: right_index]
-
-            string = string.replace(string[left_index: right_index + 1], url, 1)
-
-        return string
+        return sanitized_string
 
     def _post_message(self, message, channel, code_block=True):
 
@@ -402,106 +251,47 @@ class SlackBot(object):
         body['as_user'] = True
 
         if message:
-
             if len(message) <= SLACK_BOT_JSON_MESSAGE_LIMIT:
-
                 body['text'] = '```{}```'.format(message) if code_block else message
-
                 requests.post(url, data=body, timeout=SLACK_BOT_DEFAULT_TIMEOUT)
-
                 return
 
             last_newline = message[:SLACK_BOT_JSON_MESSAGE_LIMIT - 1].rfind('\n')
-
             to_send = message[:last_newline]
-
             body['text'] = '```{}```'.format(to_send) if code_block else to_send
-
             requests.post(url, data=body, timeout=SLACK_BOT_DEFAULT_TIMEOUT)
-
             self._post_message(message[last_newline + 1:], channel, code_block=code_block)
 
-    def _parse_asset(self, asset, action, action_list):
+    def _parse_action_parameters(self, actual_parameters: list, expected_parameters: dict, target: dict) -> Result:
+        """ Verify the action parameters match the expected parameters and add them to the target. """
+        if not actual_parameters and expected_parameters:
+            for parameter_info in expected_parameters.values():
+                if parameter_info.get('required', False):
+                    return FailureResult('Specified action requires parameters, none given')
 
-        found1 = True
+        if not actual_parameters:
+            return SuccessResult(target)
 
-        if asset not in self.asset_dict:
-            found1 = False
+        parsed_parameters = {}
+        for parameter in actual_parameters:
+            split_parameter = parameter.split(':', 1)
+            if len(split_parameter) < 2:
+                return FailureResult('Action parameters not formatted correctly')
+            parameter_name = split_parameter[0]
+            if parameter_name not in expected_parameters:
+                return FailureResult(f'Invalid parameter: {parameter_name}')
+            parsed_parameters[parameter_name] = split_parameter[1]
 
-        else:
-
-            asset_object = self.asset_dict[asset]
-
-            if len(asset_object.apps) == 0:
-                return ('Invalid asset: {}'.format(asset), None, None)
-
-            if len(asset_object.apps) > 1:
-                return ('Invalid asset: {} (Temporarily), too many apps to choose from'.format(asset), None, None)
-
-            found2 = False
-
-            for action_object in action_list:
-
-                if asset_object.asset_id in action_object.assets:
-                    found2 = True
-                    break
-
-        if not found1 or not found2:
-
-            message = 'Asset "{0}" is not valid for action "{1}"\n\nList of valid assets for {1}:\n'.format(asset, action)
-
-            for action_object in action_list:
-
-                for asset_id in action_object.assets:
-
-                    if asset_id in self.asset_dict:
-                        message += '\n{}'.format(self.asset_dict[asset_id].name)
-
-            return message, None, None
-
-        return None, asset_object, action_object
-
-    def _parse_params(self, params, param_dict, target):
-
-        if not params and param_dict:
-
-            for param in list(param_dict.values()):
-
-                if param.required:
-                    return False, 'Specified action requires parameters, none given'
-
-        if not params:
-            return True, None
-
-        parameter_dict = {}
-
-        for param in params:
-
-            spl_param = param.split(':', 1)
-
-            if len(spl_param) < 2:
-                return False, 'Action parameters not formatted correctly'
-
-            param_name = spl_param[0]
-
-            if param_name not in param_dict:
-                return False, 'Invalid parameter: {}'.format(param_name)
-
-            parameter_dict[param_name] = spl_param[1]
-
-        target['parameters'] = [parameter_dict]
+        target['parameters'] = [parsed_parameters]
 
         # Make sure all required parameters are present
-        for key, value in param_dict.items():
-
-            if value.required:
-
+        for key, value in expected_parameters.items():
+            if value.get('required', False):
                 for params in target['parameters']:
-
                     if key not in params:
-                        return False, 'Missing required parameter: {}'.format(key)
+                        return FailureResult('Missing required parameter: {key}')
 
-        return True, None
+        return SuccessResult(target)
 
     def _from_on_poll(self):
         """
@@ -629,7 +419,7 @@ class SlackBot(object):
                 self._post_message(f'{failed_parsing_prefix}\n\n{e.message}', channel)
             else:
                 logging.exception('No output found from failed argument parsing attempt.')
-                self._post_message(f'{failed_parsing_prefix}\n\nUnknown error. Check the app logs.', channel)
+                self._post_message(f'{failed_parsing_prefix}\n\n{e}', channel)
             return
         finally:
             sys.stdout = sys.__stdout__
