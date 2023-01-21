@@ -41,11 +41,6 @@ from utils.sb_result import FailureResult, Result, SuccessResult
 
 urllib3.disable_warnings()
 
-app_dir = os.path.dirname(os.path.abspath(__file__))
-if os.path.exists(f'{app_dir}/dependencies'):
-    os.sys.path.insert(0, f'{app_dir}/dependencies/websocket-client')
-    os.sys.path.insert(0, f'{app_dir}/dependencies')
-
 
 AVAILABLE_COMMANDS = sorted([
     DebugCommand,
@@ -83,7 +78,7 @@ def _load_app_state(asset_id):
 
     app_dir = os.path.dirname(os.path.abspath(__file__))
 
-    state_file = '{0}/{1}_state.json'.format(app_dir, asset_id)
+    state_file = f'{app_dir}/{asset_id}_state.json'
     real_state_file_path = os.path.realpath(state_file)
 
     if os.path.dirname(real_state_file_path) != app_dir:
