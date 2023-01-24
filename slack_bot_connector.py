@@ -299,10 +299,6 @@ class SlackBotConnector(phantom.BaseConnector):
         if self._interval is None:
             return self.get_status()
 
-        self._timeout = self._validate_integers(self, config.get('timeout', 30), SLACK_BOT_TIMEOUT_KEY)
-        if self._timeout is None:
-            return self.get_status()
-
         ret_val, ph_base_url = self._get_phantom_base_url_slack(self)
         if phantom.is_fail(ret_val):
             return ret_val

@@ -49,10 +49,9 @@
             "required": true,
             "order": 2
         },
-        "timeout": {
-            "description": "Question timeout (in minutes)",
-            "data_type": "numeric",
-            "default": 30,
+        "permitted_bot_users": {
+            "description": "Users permitted to use bot commands. Comma seperated list of Member IDs. Leave blank to allow all users (default)",
+            "data_type": "string",
             "order": 3
         },
         "response_poll_interval": {
@@ -97,11 +96,6 @@
             "description": "Permit 'get_container' command",
             "data_type": "boolean",
             "order": 10
-        },
-        "permitted_bot_users": {
-            "description": "Users permitted to use bot commands. Comma seperated list of Member IDs. Leave blank to allow all users (default)",
-            "data_type": "string",
-            "order": 11
         }
     },
     "actions": [
