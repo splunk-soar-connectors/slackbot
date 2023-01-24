@@ -19,6 +19,8 @@ ACTION_ID_START_BOT = 'start_bot'
 ACTION_ID_STOP_BOT = 'stop_bot'
 ACTION_ID_ON_POLL = 'on_poll'
 
+SOAR_NRI_HTTPS_PORT = 9999
+
 SLACK_BASE_URL = 'https://slack.com/api/'
 
 SLACK_BOT_JSON_BOT_TOKEN = 'bot_token'
@@ -46,7 +48,8 @@ SLACK_BOT_ERROR_AUTH_FAILED = 'Authorization failed. Tokens do not match.'
 SLACK_BOT_ERROR_ANSWER_FILE_NOT_FOUND = 'Found no answer filename in callback'
 SLACK_BOT_ERROR_WHILE_WRITING_ANSWER_FILE = 'Error occurred while writing in answer file: {error}'
 SLACK_BOT_ERROR_PROCESS_RESPONSE = 'There was an error processing the response: {error}'
-SLACK_BOT_ERROR_BASE_URL_NOT_FOUND = 'Phantom Base URL not found in System Setting. Please specify this value in System Settings'
+SLACK_BOT_ERROR_BASE_URL_NOT_FOUND = 'SOAR Base URL not found. Please specify this value in System Settings'
+SLACK_BOT_ERROR_BASE_URL_UNREACHABLE = 'SOAR Base URL is not reachable. Please verify the value in System Settings'
 SLACK_BOT_ERROR_EMPTY_RESPONSE = 'Status Code {code}. Empty response and no information in the header'
 SLACK_BOT_UNABLE_TO_PARSE_ERROR_DETAILS = 'Cannot parse error details'
 SLACK_BOT_ERROR_UNABLE_TO_PARSE_JSON_RESPONSE = 'Unable to parse response as JSON. {error}'

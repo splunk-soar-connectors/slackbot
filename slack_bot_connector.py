@@ -14,10 +14,12 @@
 # and limitations under the License.
 import os
 import shlex
+import socket
 import subprocess
 import sys
 from os.path import exists
 from pathlib import Path
+from urllib.parse import urlparse
 
 import encryption_helper
 import phantom.app as phantom
@@ -341,6 +343,16 @@ class SlackBotConnector(phantom.BaseConnector):
 
         return phantom.APP_SUCCESS
 
+    @staticmethod
+    def _is_port_in_use(host, port):
+        """
+        True if the port is in use on the host.
+
+        Source: https://stackoverflow.com/a/52872579
+        """
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+            return sock.connect_ex((host, port)) == 0
+
     def _get_phantom_base_url_slack(self, action_result):
         base_url = self.get_phantom_base_url()
         rest_url = SoarRestEndpoint.SYSTEM_INFO.url(base_url)
@@ -355,6 +367,21 @@ class SlackBotConnector(phantom.BaseConnector):
         if not phantom_base_url:
             return RetVal(action_result.set_status(phantom.APP_ERROR, SLACK_BOT_ERROR_BASE_URL_NOT_FOUND))
 
+        def replace_port(parsed_url, new_port):
+            return parsed_url._replace(netloc=f'{parsed_url.hostname}:{new_port}')
+
+        # For on-prem instances 443 does not necessarily work when querying the
+        # real instance URL outside of an app context if it is NRI.
+        parsed_base_url = urlparse(phantom_base_url)
+        soar_hostname = parsed_base_url.hostname
+        soar_port = parsed_base_url.port or 443
+        if not self._is_port_in_use(soar_hostname, soar_port):
+            if self._is_port_in_use(soar_hostname, SOAR_NRI_HTTPS_PORT):
+                phantom_base_url = replace_port(parsed_base_url, SOAR_NRI_HTTPS_PORT).geturl()
+            else:
+                return RetVal(action_result.set_status(phantom.APP_ERROR, SLACK_BOT_ERROR_BASE_URL_UNREACHABLE))
+
+        self.debug_print(f'Set SOAR base URL for Slack Bot to {phantom_base_url}')
         return RetVal(phantom.APP_SUCCESS, phantom_base_url)
 
     def _process_empty_reponse(self, response, action_result):
