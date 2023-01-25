@@ -547,7 +547,7 @@ Stop Slack Bot
 Type: **correct**
 Read only: **False**
 
-This action will stop Slack Bot if it is running\. It will also disable ingestion if it is enabled\.
+This action will stop Slack Bot if it is running\.
 
 #### Action Parameters
 No parameters are required for this action

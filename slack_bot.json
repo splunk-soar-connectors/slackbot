@@ -203,7 +203,7 @@
         {
             "action": "stop bot",
             "description": "Stop Slack Bot",
-            "verbose": "This action will stop Slack Bot if it is running. It will also disable ingestion if it is enabled.",
+            "verbose": "This action will stop Slack Bot if it is running.",
             "type": "correct",
             "identifier": "stop_bot",
             "read_only": false,
@@ -229,7 +229,7 @@
                     "column_name": "Message",
                     "column_order": 1,
                     "example_values": [
-                        "Slack Bot isn't running, not going to stop it. Ingestion has been disabled."
+                        "Slack Bot is not running, not going to stop it"
                     ]
                 },
                 {
