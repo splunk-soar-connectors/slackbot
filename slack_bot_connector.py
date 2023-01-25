@@ -254,7 +254,6 @@ class SlackBotConnector(phantom.BaseConnector):
 
         self._base_url = None
         self._state = {}
-        self._interval = None
         self._timeout = None
         self._socket_token = None
         self._command_permissions = {}
@@ -294,10 +293,6 @@ class SlackBotConnector(phantom.BaseConnector):
         self._permitted_users = config.get(SLACK_BOT_JSON_PERMITTED_USERS, False)
         self._log_level = config.get(SLACK_BOT_JSON_LOG_LEVEL)
         self._base_url = SLACK_BASE_URL
-
-        self._interval = self._validate_integers(self, config.get('response_poll_interval', 30), SLACK_BOT_RESP_POLL_INTERVAL_KEY)
-        if self._interval is None:
-            return self.get_status()
 
         ret_val, ph_base_url = self._get_phantom_base_url_slack(self)
         if phantom.is_fail(ret_val):
