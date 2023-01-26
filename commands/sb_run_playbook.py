@@ -41,7 +41,7 @@ class RunPlaybookCommand(Command):
         request_body['container_id'] = parsed_args.container
 
         playbook_id = getattr(parsed_args, 'playbook_id', None)
-        if not playbook_id:
+        if playbook_id is None:
             if not hasattr(parsed_args, 'repo'):
                 return FailureResult('repo argument is required when supplying playbook name instead of playbook ID')
             playbook_id = f'{parsed_args.repo}/{parsed_args.name}'

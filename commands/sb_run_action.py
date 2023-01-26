@@ -72,7 +72,7 @@ class RunActionCommand(Command):
         query_parameters = {
             'page_size': 10,
             '_filter_name__iexact': self.slack_bot._create_query_string(getattr(parsed_args, 'asset_name', None)),
-            '_filter_id__iexact': getattr(parsed_args, 'asset_id', None),
+            '_filter_id': getattr(parsed_args, 'asset_id', None),
             '_filter_app': getattr(parsed_args, 'app_id', None),
             '_filter_app__name__iexact': self.slack_bot._create_query_string(getattr(parsed_args, 'app_name', None)),
         }
@@ -135,9 +135,9 @@ class RunActionCommand(Command):
 
             if assets.get('count', 0) < 1:
                 if hasattr(parsed_args, 'asset_name'):
-                    asset_filter_message = f' for asset "{parsed_args.app_name}"'
+                    asset_filter_message = f' for asset "{parsed_args.asset_name}"'
                 elif hasattr(parsed_args, 'asset_id'):
-                    asset_filter_message = f' for asset ID {parsed_args.app_id}'
+                    asset_filter_message = f' for asset ID {parsed_args.asset_id}'
                 else:
                     asset_filter_message = ''
                 return FailureResult(f'Failed to find asset{asset_filter_message}')
@@ -218,7 +218,7 @@ class RunActionCommand(Command):
         if not run_id:
             return 'Failed to run action: Could not get action run ID'
 
-        action_url = f'{self.slack_bot.phantom_url}action/{run_id}'
+        action_url = f'{self.slack_bot.phantom_url}mission/{parsed_args.container}/analyst/action_run/{run_id}'
 
         self.slack_bot._post_message(f'Action run URL: {action_url}', self.channel, code_block=False)
 
