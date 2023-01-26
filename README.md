@@ -463,6 +463,12 @@ optional arguments:
 After receiving a **run_playbook** command, the Slack Bot will start the playbook and send a
 link to the container in which the playbook is running to Slack.
 
+### Troubleshooting
+The logs for the "start bot", "stop bot", and "on poll" actions are in the same place as any other SOAR action or ingestion.
+
+The logs for the bot, however, are logged separately since the bot is its own process. These logs can be found
+under `/tmp/slack_bot.log` and the log level can be controlled through the log level asset configuration.
+
 
 ### Configuration Variables
 The below configuration variables are required for this Connector to operate.  These variables are specified when configuring a Slack Bot asset in SOAR.
