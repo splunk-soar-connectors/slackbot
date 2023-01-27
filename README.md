@@ -1,12 +1,12 @@
 [comment]: # "Auto-generated SOAR connector documentation"
 # Slack Bot
 
-Publisher: Splunk
-Connector Version: 1\.0\.1
-Product Vendor: Slack Technologies
-Product Name: Slack Bot
-Product Version Supported (regex): "\.\*"
-Minimum Product Version: 5\.3\.5
+Publisher: Splunk  
+Connector Version: 1\.0\.1  
+Product Vendor: Slack Technologies  
+Product Name: Slack Bot  
+Product Version Supported (regex): "\.\*"  
+Minimum Product Version: 5\.3\.5  
 
 Integrate with Slack using a custom Slack App
 
@@ -486,16 +486,16 @@ VARIABLE | REQUIRED | TYPE | DESCRIPTION
 **permit\_bot\_run\_playbook** |  optional  | boolean | Permit 'run\_playbook' command
 **permit\_bot\_get\_container** |  optional  | boolean | Permit 'get\_container' command
 
-### Supported Actions
-[test connectivity](#action-test-connectivity) - Tests authorization with Slack
-[on poll](#action-on-poll) - Start Slack Bot and make health checks to it
-[start bot](#action-start-bot) - Start Slack Bot
-[stop bot](#action-stop-bot) - Stop Slack Bot
+### Supported Actions  
+[test connectivity](#action-test-connectivity) - Tests authorization with Slack  
+[on poll](#action-on-poll) - Start Slack Bot and make health checks to it  
+[start bot](#action-start-bot) - Start Slack Bot  
+[stop bot](#action-stop-bot) - Stop Slack Bot  
 
 ## action: 'test connectivity'
 Tests authorization with Slack
 
-Type: **test**
+Type: **test**  
 Read only: **True**
 
 Checks that the provided bot token is valid and grabs information about the configured bot user\.
@@ -504,12 +504,12 @@ Checks that the provided bot token is valid and grabs information about the conf
 No parameters are required for this action
 
 #### Action Output
-No Output
+No Output  
 
 ## action: 'on poll'
 Start Slack Bot and make health checks to it
 
-Type: **ingest**
+Type: **ingest**  
 Read only: **True**
 
 Enabling ingestion causes the on poll action to be called every polling interval \(configured in ingestion settings\)\. The on poll action will check if Slack Bot is running; if it is not, the action will start it\. No new containers or artifacts will be created by this action\.
@@ -517,19 +517,19 @@ Enabling ingestion causes the on poll action to be called every polling interval
 #### Action Parameters
 PARAMETER | REQUIRED | DESCRIPTION | TYPE | CONTAINS
 --------- | -------- | ----------- | ---- | --------
-**start\_time** |  optional  | Parameter ignored in this app | numeric |
-**end\_time** |  optional  | Parameter ignored in this app | numeric |
-**container\_id** |  optional  | Parameter ignored in this app | string |
-**container\_count** |  optional  | Parameter ignored in this app | numeric |
-**artifact\_count** |  optional  | Parameter ignored in this app | numeric |
+**start\_time** |  optional  | Parameter ignored in this app | numeric | 
+**end\_time** |  optional  | Parameter ignored in this app | numeric | 
+**container\_id** |  optional  | Parameter ignored in this app | string | 
+**container\_count** |  optional  | Parameter ignored in this app | numeric | 
+**artifact\_count** |  optional  | Parameter ignored in this app | numeric | 
 
 #### Action Output
-No Output
+No Output  
 
 ## action: 'start bot'
 Start Slack Bot
 
-Type: **correct**
+Type: **correct**  
 Read only: **False**
 
 This action will start Slack Bot if it is not already running\.
@@ -540,17 +540,17 @@ No parameters are required for this action
 #### Action Output
 DATA PATH | TYPE | CONTAINS
 --------- | ---- | --------
-action\_result\.data | string |
-action\_result\.status | string |
-action\_result\.message | string |
-action\_result\.summary | string |
-summary\.total\_objects | numeric |
-summary\.total\_objects\_successful | numeric |
+action\_result\.data | string | 
+action\_result\.status | string | 
+action\_result\.message | string | 
+action\_result\.summary | string | 
+summary\.total\_objects | numeric | 
+summary\.total\_objects\_successful | numeric |   
 
 ## action: 'stop bot'
 Stop Slack Bot
 
-Type: **correct**
+Type: **correct**  
 Read only: **False**
 
 This action will stop Slack Bot if it is running\.
@@ -561,9 +561,9 @@ No parameters are required for this action
 #### Action Output
 DATA PATH | TYPE | CONTAINS
 --------- | ---- | --------
-action\_result\.data | string |
-action\_result\.status | string |
-action\_result\.message | string |
-action\_result\.summary | string |
-summary\.total\_objects | numeric |
-summary\.total\_objects\_successful | numeric |
+action\_result\.data | string | 
+action\_result\.status | string | 
+action\_result\.message | string | 
+action\_result\.summary | string | 
+summary\.total\_objects | numeric | 
+summary\.total\_objects\_successful | numeric | 
