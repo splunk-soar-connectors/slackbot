@@ -1,0 +1,391 @@
+{
+    "appid": "2591bdbc-21e1-4aa1-bf64-e2aa5c733a4a",
+    "name": "Slack Bot",
+    "description": "Integrate with Slack using a custom Slack App",
+    "publisher": "Splunk",
+    "contributors": [
+        {
+            "name": "Dallan Wagner"
+        },
+        {
+            "name": "Mhike Funderburk"
+        }
+    ],
+    "package_name": "phantom_slack_bot",
+    "type": "information",
+    "license": "Copyright (c) 2023 Splunk Inc.",
+    "main_module": "slack_bot_connector.py",
+    "app_version": "1.0.1",
+    "utctime_updated": "2022-02-04T18:14:51.000000Z",
+    "product_vendor": "Slack Technologies",
+    "product_name": "Slack Bot",
+    "product_version_regex": ".*",
+    "min_phantom_version": "5.3.5",
+    "python_version": "3",
+    "fips_compliant": true,
+    "latest_tested_versions": [
+        "Cloud API, January 6, 2023"
+    ],
+    "logo": "logo_slack.svg",
+    "logo_dark": "logo_slack_dark.svg",
+    "require_auth_token": false,
+    "rest_handler": "slack_bot_connector.handle_request",
+    "configuration": {
+        "bot_token": {
+            "data_type": "password",
+            "description": "Bot User OAuth Access Token",
+            "required": true,
+            "order": 0
+        },
+        "socket_token": {
+            "data_type": "password",
+            "description": "Socket Token",
+            "required": true,
+            "order": 1
+        },
+        "soar_auth_token": {
+            "data_type": "password",
+            "description": "Automation User Auth Token",
+            "required": true,
+            "order": 2
+        },
+        "permitted_bot_users": {
+            "description": "Users permitted to use bot commands. Comma seperated list of Member IDs. Leave blank to allow all users (default)",
+            "data_type": "string",
+            "order": 3
+        },
+        "log_level": {
+            "description": "The log level for the bot",
+            "data_type": "string",
+            "order": 4,
+            "value_list": [
+                "DEBUG",
+                "INFO",
+                "WARNING",
+                "ERROR"
+            ],
+            "default": "WARNING"
+        },
+        "permit_bot_get_action": {
+            "description": "Permit 'get_action' command",
+            "data_type": "boolean",
+            "order": 5
+        },
+        "permit_bot_run_action": {
+            "description": "Permit 'run_action' command",
+            "data_type": "boolean",
+            "order": 6
+        },
+        "permit_bot_get_playbook": {
+            "description": "Permit 'get_playbook' command",
+            "data_type": "boolean",
+            "order": 7
+        },
+        "permit_bot_run_playbook": {
+            "description": "Permit 'run_playbook' command",
+            "data_type": "boolean",
+            "order": 8
+        },
+        "permit_bot_get_container": {
+            "description": "Permit 'get_container' command",
+            "data_type": "boolean",
+            "order": 9
+        }
+    },
+    "actions": [
+        {
+            "action": "test connectivity",
+            "description": "Tests authorization with Slack",
+            "verbose": "Checks that the provided bot token is valid and grabs information about the configured bot user.",
+            "type": "test",
+            "identifier": "test_connectivity",
+            "read_only": true,
+            "parameters": {},
+            "output": [],
+            "versions": "EQ(*)"
+        },
+        {
+            "action": "on poll",
+            "description": "Start Slack Bot and make health checks to it",
+            "verbose": "Enabling ingestion causes the on poll action to be called every polling interval (configured in ingestion settings). The on poll action will check if Slack Bot is running; if it is not, the action will start it. No new containers or artifacts will be created by this action.",
+            "type": "ingest",
+            "identifier": "on_poll",
+            "read_only": true,
+            "parameters": {
+                "start_time": {
+                    "data_type": "numeric",
+                    "description": "Parameter ignored in this app",
+                    "order": 0
+                },
+                "end_time": {
+                    "data_type": "numeric",
+                    "description": "Parameter ignored in this app",
+                    "order": 1
+                },
+                "container_id": {
+                    "data_type": "string",
+                    "description": "Parameter ignored in this app",
+                    "order": 2
+                },
+                "container_count": {
+                    "data_type": "numeric",
+                    "description": "Parameter ignored in this app",
+                    "order": 3
+                },
+                "artifact_count": {
+                    "data_type": "numeric",
+                    "description": "Parameter ignored in this app",
+                    "order": 4
+                }
+            },
+            "output": [],
+            "versions": "EQ(*)"
+        },
+        {
+            "action": "start bot",
+            "description": "Start Slack Bot",
+            "verbose": "This action will start Slack Bot if it is not already running.",
+            "type": "correct",
+            "identifier": "start_bot",
+            "read_only": false,
+            "parameters": {},
+            "output": [
+                {
+                    "data_path": "action_result.data",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.status",
+                    "data_type": "string",
+                    "column_name": "Status",
+                    "column_order": 0,
+                    "example_values": [
+                        "success",
+                        "failed"
+                    ]
+                },
+                {
+                    "data_path": "action_result.message",
+                    "data_type": "string",
+                    "column_name": "Message",
+                    "column_order": 1,
+                    "example_values": [
+                        "Slack Bot is already running, not going to start a new instance."
+                    ]
+                },
+                {
+                    "data_path": "action_result.summary",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "summary.total_objects",
+                    "data_type": "numeric",
+                    "example_values": [
+                        1
+                    ]
+                },
+                {
+                    "data_path": "summary.total_objects_successful",
+                    "data_type": "numeric",
+                    "example_values": [
+                        1
+                    ]
+                }
+            ],
+            "render": {
+                "width": 12,
+                "title": "Start Slack Bot",
+                "type": "table",
+                "height": 5
+            },
+            "versions": "EQ(*)"
+        },
+        {
+            "action": "stop bot",
+            "description": "Stop Slack Bot",
+            "verbose": "This action will stop Slack Bot if it is running.",
+            "type": "correct",
+            "identifier": "stop_bot",
+            "read_only": false,
+            "parameters": {},
+            "output": [
+                {
+                    "data_path": "action_result.data",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.status",
+                    "data_type": "string",
+                    "column_name": "Status",
+                    "column_order": 0,
+                    "example_values": [
+                        "success",
+                        "failed"
+                    ]
+                },
+                {
+                    "data_path": "action_result.message",
+                    "data_type": "string",
+                    "column_name": "Message",
+                    "column_order": 1,
+                    "example_values": [
+                        "Slack Bot is not running, not going to stop it"
+                    ]
+                },
+                {
+                    "data_path": "action_result.summary",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "summary.total_objects",
+                    "data_type": "numeric",
+                    "example_values": [
+                        1
+                    ]
+                },
+                {
+                    "data_path": "summary.total_objects_successful",
+                    "data_type": "numeric",
+                    "example_values": [
+                        1
+                    ]
+                }
+            ],
+            "render": {
+                "width": 12,
+                "title": "Stop Slack Bot",
+                "type": "table",
+                "height": 5
+            },
+            "versions": "EQ(*)"
+        }
+    ],
+    "pip_dependencies": {
+        "wheel": [
+            {
+                "module": "Django",
+                "input_file": "wheels/py3/Django-3.2.13-py3-none-any.whl"
+            },
+            {
+                "module": "asgiref",
+                "input_file": "wheels/py3/asgiref-3.4.1-py3-none-any.whl"
+            },
+            {
+                "module": "beautifulsoup4",
+                "input_file": "wheels/py3/beautifulsoup4-4.10.0-py3-none-any.whl"
+            },
+            {
+                "module": "certifi",
+                "input_file": "wheels/py3/certifi-2022.12.7-py3-none-any.whl"
+            },
+            {
+                "module": "charset_normalizer",
+                "input_file": "wheels/py3/charset_normalizer-2.0.12-py3-none-any.whl"
+            },
+            {
+                "module": "idna",
+                "input_file": "wheels/py3/idna-3.3-py3-none-any.whl"
+            },
+            {
+                "module": "pytz",
+                "input_file": "wheels/shared/pytz-2022.6-py2.py3-none-any.whl"
+            },
+            {
+                "module": "requests",
+                "input_file": "wheels/shared/requests-2.27.1-py2.py3-none-any.whl"
+            },
+            {
+                "module": "sh",
+                "input_file": "wheels/shared/sh-1.14.2-py2.py3-none-any.whl"
+            },
+            {
+                "module": "simplejson",
+                "input_file": "wheels/py36/simplejson-3.17.5-cp36-cp36m-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_12_x86_64.manylinux2010_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl"
+            },
+            {
+                "module": "slack_bolt",
+                "input_file": "wheels/shared/slack_bolt-1.14.0-py2.py3-none-any.whl"
+            },
+            {
+                "module": "slack_sdk",
+                "input_file": "wheels/shared/slack_sdk-3.19.5-py2.py3-none-any.whl"
+            },
+            {
+                "module": "soupsieve",
+                "input_file": "wheels/py3/soupsieve-2.3.2.post1-py3-none-any.whl"
+            },
+            {
+                "module": "sqlparse",
+                "input_file": "wheels/py3/sqlparse-0.4.3-py3-none-any.whl"
+            },
+            {
+                "module": "typing_extensions",
+                "input_file": "wheels/py3/typing_extensions-4.1.1-py3-none-any.whl"
+            },
+            {
+                "module": "urllib3",
+                "input_file": "wheels/shared/urllib3-1.26.13-py2.py3-none-any.whl"
+            },
+            {
+                "module": "websocket_client",
+                "input_file": "wheels/shared/websocket_client-1.2.1-py2.py3-none-any.whl"
+            }
+        ]
+    },
+    "pip39_dependencies": {
+        "wheel": [
+            {
+                "module": "Django",
+                "input_file": "wheels/py3/Django-3.2.16-py3-none-any.whl"
+            },
+            {
+                "module": "asgiref",
+                "input_file": "wheels/py3/asgiref-3.6.0-py3-none-any.whl"
+            },
+            {
+                "module": "certifi",
+                "input_file": "wheels/py3/certifi-2022.12.7-py3-none-any.whl"
+            },
+            {
+                "module": "charset_normalizer",
+                "input_file": "wheels/py39/charset_normalizer-3.0.1-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl"
+            },
+            {
+                "module": "idna",
+                "input_file": "wheels/py3/idna-3.4-py3-none-any.whl"
+            },
+            {
+                "module": "pytz",
+                "input_file": "wheels/shared/pytz-2022.7.1-py2.py3-none-any.whl"
+            },
+            {
+                "module": "requests",
+                "input_file": "wheels/py3/requests-2.28.2-py3-none-any.whl"
+            },
+            {
+                "module": "sh",
+                "input_file": "wheels/shared/sh-1.14.3-py2.py3-none-any.whl"
+            },
+            {
+                "module": "simplejson",
+                "input_file": "wheels/py39/simplejson-3.18.1-cp39-cp39-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl"
+            },
+            {
+                "module": "slack_bolt",
+                "input_file": "wheels/shared/slack_bolt-1.16.1-py2.py3-none-any.whl"
+            },
+            {
+                "module": "slack_sdk",
+                "input_file": "wheels/shared/slack_sdk-3.19.5-py2.py3-none-any.whl"
+            },
+            {
+                "module": "sqlparse",
+                "input_file": "wheels/py3/sqlparse-0.4.3-py3-none-any.whl"
+            },
+            {
+                "module": "urllib3",
+                "input_file": "wheels/shared/urllib3-1.26.14-py2.py3-none-any.whl"
+            }
+        ]
+    }
+}
