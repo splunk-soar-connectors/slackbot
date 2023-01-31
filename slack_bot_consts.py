@@ -23,6 +23,9 @@ SOAR_NRI_HTTPS_PORT = 9999
 
 SLACK_BASE_URL = 'https://slack.com/api/'
 
+# This value should match the filename for the standalone process
+SLACK_BOT_PROCESS_NAME = 'slack_bot_standalone.py'
+
 SLACK_BOT_JSON_BOT_TOKEN = 'bot_token'
 SLACK_BOT_JSON_SOAR_AUTH_TOKEN = 'soar_auth_token'
 SLACK_BOT_JSON_SOCKET_TOKEN = 'socket_token'

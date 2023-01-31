@@ -626,8 +626,8 @@ class SlackBotConnector(phantom.BaseConnector):
         self.debug_print('PID of Bot : {}'.format(pid))
         if pid:
             try:
-                if 'slack_bot.py' in sh.ps('ww', pid):  # pylint: disable=E1101
-                    self.save_progress('Detected SlackBot running with pid {0}'.format(pid))
+                if SLACK_BOT_PROCESS_NAME in sh.ps('ww', pid):  # pylint: disable=E1101
+                    self.save_progress(f'Detected Slack Bot running with pid {pid}')
                     return action_result.set_status(phantom.APP_SUCCESS, SLACK_BOT_SUCCESS_SLACK_BOT_RUNNING)
             except Exception:
                 pass
@@ -636,10 +636,10 @@ class SlackBotConnector(phantom.BaseConnector):
         app_version = self.get_app_json().get('app_version', '')
 
         try:
-            ps_out = sh.grep(sh.ps('ww', 'aux'), 'slack_bot.py')  # pylint: disable=E1101
+            ps_out = sh.grep(sh.ps('ww', 'aux'), SLACK_BOT_PROCESS_NAME)  # pylint: disable=E1101
             old_pid = shlex.split(str(ps_out))[1]
             if app_version not in ps_out:
-                self.save_progress(f'Found an old version of slack_bot running with pid {old_pid}. '
+                self.save_progress(f'Found an old version of {SLACK_BOT_PROCESS_NAME} running with PID {old_pid}. '
                                    'Please stop it before trying to start a new bot.')
                 return action_result.set_status(phantom.APP_SUCCESS, SLACK_BOT_ERROR_OLD_SLACK_BOT_VERSION_RUNNING)
             elif asset_id in ps_out:  # pylint: disable=E1101
@@ -648,7 +648,7 @@ class SlackBotConnector(phantom.BaseConnector):
         except Exception:
             pass
 
-        slack_bot_filename = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'slack_bot.py')
+        slack_bot_filename = os.path.join(os.path.dirname(os.path.realpath(__file__)), SLACK_BOT_PROCESS_NAME)
 
         # check if the socket token is valid
         headers = {
@@ -659,13 +659,13 @@ class SlackBotConnector(phantom.BaseConnector):
         resp = resp.json()
 
         if not resp.get('ok'):
-            self.save_progress('Failed to start SlackBot')
+            self.save_progress('Failed to start Slack Bot')
             return action_result.set_status(phantom.APP_ERROR, SLACK_BOT_SOCKET_TOKEN_ERROR)
 
-        self.save_progress('Starting SlackBot')
+        self.save_progress('Starting Slack Bot')
         proc = subprocess.Popen(['phenv', 'python3', slack_bot_filename, asset_id, app_version])
         self._state['pid'] = proc.pid
-        self.save_progress('Started SlackBot with pid: {0}'.format(proc.pid))
+        self.save_progress('Started Slack Bot with pid: {0}'.format(proc.pid))
 
         return action_result.set_status(phantom.APP_SUCCESS, SLACK_BOT_SUCCESS_SLACK_BOT_STARTED)
 
@@ -679,7 +679,7 @@ class SlackBotConnector(phantom.BaseConnector):
         if pid:
             self._state.pop('pid')
             try:
-                if 'slack_bot.py' in sh.ps('ww', pid):  # pylint: disable=E1101
+                if SLACK_BOT_PROCESS_NAME in sh.ps('ww', pid):  # pylint: disable=E1101
                     try:
                         sh.kill(pid)  # pylint: disable=E1101
                         return action_result.set_status(phantom.APP_SUCCESS, SLACK_BOT_SUCCESS_SLACK_BOT_STOPPED)
@@ -689,7 +689,7 @@ class SlackBotConnector(phantom.BaseConnector):
                 return action_result.set_status(phantom.APP_ERROR, SLACK_BOT_ERROR_SLACK_BOT_NOT_RUNNING)
         else:
             try:
-                ps_out = sh.grep(sh.ps('ww', 'aux'), 'slack_bot.py')
+                ps_out = sh.grep(sh.ps('ww', 'aux'), SLACK_BOT_PROCESS_NAME)
                 pid = shlex.split(str(ps_out))[1]
                 try:
                     sh.kill(pid)  # pylint: disable=E1101
@@ -713,12 +713,12 @@ class SlackBotConnector(phantom.BaseConnector):
         pid = self._state.get('pid')
         if pid:
             try:
-                # use manual on poll action to 'reload' state file into slack_bot.py
+                # use manual on poll action to 'reload' state file into slack_bot_standalone.py
                 if self.is_poll_now():
                     self.save_progress('Container Count: {}'.format(container_count))
                     if container_count == 1234:
                         sh.kill(pid)
-                        self.save_progress('Container count set to 1234, stopping slack_bot.py at pid {}'.format(pid))
+                        self.save_progress(f'Container count set to 1234, stopping {SLACK_BOT_PROCESS_NAME} at pid {pid}')
                     elif container_count == int(pid):
                         sh.kill(pid)
                         self.save_progress('pid passed in as container count, stopping bot')
@@ -726,8 +726,8 @@ class SlackBotConnector(phantom.BaseConnector):
                     else:
                         self.save_progress('HINT: Set Maximum Containers to 1234 to restart slack_bot, or set to PID to stop slack_bot')
 
-                if 'slack_bot.py' in sh.ps('ww', pid):  # pylint: disable=E1101
-                    self.save_progress('Detected SlackBot running with pid {0}'.format(pid))
+                if SLACK_BOT_PROCESS_NAME in sh.ps('ww', pid):  # pylint: disable=E1101
+                    self.save_progress(f'Detected Slack Bot running with pid {pid}')
                     return action_result.set_status(phantom.APP_SUCCESS, SLACK_BOT_SUCCESS_SLACK_BOT_RUNNING)
             except Exception:
                 pass
@@ -736,7 +736,7 @@ class SlackBotConnector(phantom.BaseConnector):
         app_version = self.get_app_json().get('app_version', '')
 
         try:
-            ps_out = sh.grep(sh.ps('ww', 'aux'), 'slack_bot.py')  # pylint: disable=E1101
+            ps_out = sh.grep(sh.ps('ww', 'aux'), SLACK_BOT_PROCESS_NAME)  # pylint: disable=E1101
             old_pid = shlex.split(str(ps_out))[1]
             if app_version not in ps_out:
                 self.save_progress('Found an old version of slack_bot running with pid {}, going to kill it'.format(old_pid))
@@ -747,7 +747,7 @@ class SlackBotConnector(phantom.BaseConnector):
         except Exception:
             pass
 
-        slack_bot_filename = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'slack_bot.py')
+        slack_bot_filename = os.path.join(os.path.dirname(os.path.realpath(__file__)), SLACK_BOT_PROCESS_NAME)
 
         # check if the socket token is valid
         headers = {
@@ -758,13 +758,13 @@ class SlackBotConnector(phantom.BaseConnector):
         resp = resp.json()
 
         if not resp.get('ok'):
-            self.save_progress('Failed to start SlackBot')
+            self.save_progress('Failed to start Slack Bot')
             return action_result.set_status(phantom.APP_ERROR, SLACK_BOT_SOCKET_TOKEN_ERROR)
 
-        self.save_progress('Starting SlackBot')
+        self.save_progress('Starting Slack Bot')
         proc = subprocess.Popen(['phenv', 'python3', slack_bot_filename, asset_id, app_version])
         self._state['pid'] = proc.pid
-        self.save_progress('Started SlackBot with pid: {0}'.format(proc.pid))
+        self.save_progress('Started Slack Bot with pid: {0}'.format(proc.pid))
 
         return action_result.set_status(phantom.APP_SUCCESS, SLACK_BOT_SUCCESS_SLACK_BOT_STARTED)
 

@@ -1,4 +1,4 @@
-# File: slack_bot.py
+# File: slack_bot_standalone.py
 #
 # Copyright (c) 2023 Splunk Inc.
 #
@@ -426,7 +426,7 @@ class SlackBot(object):
 
 
 def main():  # noqa
-    logging.info('**Spawning slack_bot.py...')
+    logging.info('**Spawning slack_bot_standalone.py...')
     if not os.path.exists('./bot_config.py'):
         if len(sys.argv) != 3:
             logging.error('Please create a bot_config.py file, and place it in this directory')
