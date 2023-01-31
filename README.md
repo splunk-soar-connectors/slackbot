@@ -24,13 +24,13 @@ SOAR's Slack Bot Connector requires multiple authentication tokens in its config
 ### Create a Slack App
 
 Creating a Slack App is required to get the proper bot token for authenticating the SOAR Slack Bot Connector.
-To do this, go to <https://api.slack.com/apps> in a browser, and select **Create New App** .
+To do this, go to <https://api.slack.com/apps> in a browser, and select **Create New App**.
 
 [![](img/slack_your_apps.png)](img/slack_your_apps.png)
 
-In the pop-up window, there are two options. Select **From scratch** . Another pop-up window will open.
+In the pop-up window, there are two options. Select **From scratch**. Another pop-up window will open.
 
-Give the app a name and associate it with a Slack team/workspace. Then, click **Create App** .
+Give the app a name and associate it with a Slack team/workspace. Then, click **Create App**.
 
 [![](img/slack_create_an_app.png)](img/slack_create_an_app.png)
 
@@ -41,111 +41,33 @@ On the next page, there will be general information displayed about the new app.
 On the same page, there is an **App Level tokens** section. This section will have a **Generate Token and
 Scope** button. Click on it to open another pop-up.
 
-Set the Token Name to **socket_token** . Just below this is an **Add Scope** button. Click it.
+Set the Token Name to **socket_token**. Just below this is an **Add Scope** button. Click it.
 
-Add **connection:write & authorization:read** and click on **Generate** . This token will be needed during asset configuration.
+Add **connection:write & authorization:read** and click on **Generate**. This token will be needed during asset configuration.
 
 [![](img/slack_socket_token.png)](img/slack_socket_token.png)
 
-In the menu bar on the left, select **OAuth & Permissions** . On that page, scroll down to the
+In the menu bar on the left, select **OAuth & Permissions**. On that page, scroll down to the
 **Scopes** section and click **Add an OAuth Scope** to add scopes to your **Bot Token** and **User
-Token** .
+Token**.
 
 [![](img/slack_add_scopes.png)](img/slack_add_scopes.png)
 
-The required scopes for each possible action the bot can do are listed below. Please add a particular scope to allow the bot to do the corresponding action.
+The minimum required scopes for the bot to function are shown below.
+
+- app_mentions:read
+- channels:history
+- chat:write
+- im:history
+- im:write
+- mpim:write
 
 
-<table>
-<colgroup>
-<col style="width: 50%" />
-<col style="width: 50%" />
-</colgroup>
-<thead>
-<tr class="header">
-<th>Required Action Scopes</th>
-<th></th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<th>Action</th>
-<th>Bot Token Scopes</th>
-</tr>
-
-<tr class="odd">
-<td>Create Channel</td>
-<td><ul>
-<li>channels:manage</li>
-<li>groups:write</li>
-<li>im:write</li>
-<li>mpim:write</li>
-</ul></td>
-</tr>
-<tr class="even">
-<td>List Channels</td>
-<td><ul>
-<li>channels:read</li>
-<li>groups:read</li>
-<li>im:read</li>
-<li>mpim:read</li>
-</ul></td>
-</tr>
-<tr class="odd">
-<td>List Users</td>
-<td><ul>
-<li>users:read</li>
-</ul></td>
-</tr>
-<tr class="even">
-<td>Get User</td>
-<td><ul>
-<li>users:read</li>
-</ul></td>
-</tr>
-<tr class="odd">
-<td>Invite User</td>
-<td><ul>
-<li>channels:manage</li>
-<li>groups:write</li>
-<li>im:write</li>
-<li>mpim:write</li>
-</ul></td>
-</tr>
-<tr class="even">
-<td>Send Message</td>
-<td><ul>
-<li>chat:write</li>
-</ul></td>
-</tr>
-<tr class="odd">
-<td>Add Reaction</td>
-<td><ul>
-<li>reactions:write</li>
-</ul></td>
-</tr>
-<tr class="even">
-<td>Upload File</td>
-<td><ul>
-<li>files:write</li>
-</ul></td>
-</tr>
-<tr class="odd">
-<td>Ask Question</td>
-<td><ul>
-<li>chat:write</li>
-</ul></td>
-</tr>
-</tbody>
-</table>
-
-
-
-Next, click on **Install App** in the side bar. On that page, click **Install to Workspace** .
+Next, click on **Install App** in the side bar. On that page, click **Install to Workspace**.
 
 [![](img/slack_install_app.png)](img/slack_install_app.png)
 
-On the next page, click **Allow** .
+On the next page, click **Allow**.
 
 [![](img/slack_allow_app.png)](img/slack_allow_app.png)
 
@@ -157,7 +79,7 @@ OAuth Access Token** will be required during asset configuration.
 ## SOAR Base URL
 
 The app uses the SOAR **Base URL** configuration to generate links to actions, so please make sure a
-valid url is specified in the **System Settings** .
+valid url is specified in the **System Settings**.
 
 [![](img/slack_system_settings.png)](img/slack_system_settings.png)
 
@@ -174,10 +96,10 @@ Fill out the **Bot User OAuth Access Token** and **Socket Token** in the **Asset
 **NOTE:** Before you are able to save, you will also need to fill in the Automation User Auth Token.
 See the following section if you do not already have that token available.
 
-Click **SAVE** . You will be asked to fill in the **Ingest Settings** . The "Label to apply
+Click **SAVE**. You will be asked to fill in the **Ingest Settings**. The "Label to apply
 to objects from this source" setting is ignored by this app, so it can be set to anything.
 
-Click **SAVE** .
+Click **SAVE**.
 
 [![](img/slack_ingest_settings.png)](img/slack_ingest_settings.png)
 
@@ -194,7 +116,7 @@ this user are as follows:
     -   Set the **User Type** to **Automation**
     -   Give the user a **Username** like "Slack Automation"
     -   For security reasons, accessing 127.0.0.1 is not allowed. Set **Allowed IPs** same as the
-        **instance IP or "any"** . (eg : If instance IP is 10.1.18.123, set allowed IP also
+        **instance IP or "any"**. (eg : If instance IP is 10.1.18.123, set allowed IP also
         10.1.18.123)
     -   Set the **Default Label** to the label seen in the Slack Bot asset's **Ingest Settings**
     -   Under **Roles** , in addition to the default **Automation** role, add the **Observer** role
@@ -226,7 +148,7 @@ option.
 
 [![](img/slack_socket_mode.png)](img/slack_socket_mode.png)
 
-Once on this page, toggle on **Socket Mode** .
+Once on this page, toggle on **Socket Mode**.
 
 Then, click on the **Event Subscriptions** option which will redirect you to the
 **Event Subscriptions** page. From there add the following subscriptions for bot:
