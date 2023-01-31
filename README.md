@@ -53,7 +53,7 @@ Token**.
 
 [![](img/slack_add_scopes.png)](img/slack_add_scopes.png)
 
-The minimum required scopes for the bot to function that are shown below.
+The minimum required scopes for the bot to function are shown below.
 
 - app_mentions:read
 - channels:history
