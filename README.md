@@ -53,17 +53,14 @@ Token**.
 
 [![](img/slack_add_scopes.png)](img/slack_add_scopes.png)
 
-The three required scopes that need to be explicitly added are shown below. 
-
-- chat:write
-- im:write
-- mpim:write
-
-Besides these, a few more scopes are required but Slack should automatically add them as required scopes for the app. They are shown below for informational purposes:
+The minimum required scopes for the bot to function that are shown below.
 
 - app_mentions:read
 - channels:history
+- chat:write
 - im:history
+- im:write
+- mpim:write
 
 
 Next, click on **Install App** in the side bar. On that page, click **Install to Workspace**.
