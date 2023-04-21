@@ -663,7 +663,7 @@ class SlackBotConnector(phantom.BaseConnector):
             return action_result.set_status(phantom.APP_ERROR, SLACK_BOT_SOCKET_TOKEN_ERROR)
 
         self.save_progress('Starting Slack Bot')
-        proc = subprocess.Popen(['phenv', 'python3', slack_bot_filename, asset_id, app_version])
+        proc = subprocess.Popen([sys.executable, slack_bot_filename, asset_id, app_version])
         self._state['pid'] = proc.pid
         self.save_progress('Started Slack Bot with pid: {0}'.format(proc.pid))
 
@@ -762,7 +762,7 @@ class SlackBotConnector(phantom.BaseConnector):
             return action_result.set_status(phantom.APP_ERROR, SLACK_BOT_SOCKET_TOKEN_ERROR)
 
         self.save_progress('Starting Slack Bot')
-        proc = subprocess.Popen(['phenv', 'python3', slack_bot_filename, asset_id, app_version])
+        proc = subprocess.Popen([sys.executable, slack_bot_filename, asset_id, app_version])
         self._state['pid'] = proc.pid
         self.save_progress('Started Slack Bot with pid: {0}'.format(proc.pid))
 
