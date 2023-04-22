@@ -9,7 +9,7 @@ SOAR's Slack Bot Connector requires multiple authentication tokens in its config
 - Socket Token - used to establish a websocket connection with Slack in order to listen for events
 - SOAR Auth Token - used by the bot to authenticate requests to SOAR endpoints
 
-### Create a Slack App
+## Create a Slack App
 
 Creating a Slack App is required to get the proper bot token for authenticating the SOAR Slack Bot Connector.
 To do this, go to <https://api.slack.com/apps> in a browser, and select **Create New App**.
@@ -50,6 +50,21 @@ The minimum required scopes for the bot to function are shown below.
 - im:write
 - mpim:write
 
+### Set up Socket Mode in Slack
+
+Go to the **Your apps** option in Slack. From the menu on the left select the **Socket Mode**
+option.
+
+[![](img/slack_socket_mode.png)](img/slack_socket_mode.png)
+
+Once on this page, toggle on **Socket Mode**.
+
+Then, click on the **Event Subscriptions** option which will redirect you to the
+**Event Subscriptions** page. From there add the following subscriptions for bot:
+
+[![](img/slack_subscription_events.png)](img/slack_subscription_events.png)
+
+### Install App on Slack
 
 Next, click on **Install App** in the side bar. On that page, click **Install to Workspace**.
 
@@ -64,35 +79,16 @@ OAuth Access Token** will be required during asset configuration.
 
 [![](img/slack_auth_tokens.png)](img/slack_auth_tokens.png)
 
-## SOAR Base URL
+## SOAR Configuration
+
+### SOAR Base URL
 
 The app uses the SOAR **Base URL** configuration to generate links to actions, so please make sure a
 valid url is specified in the **System Settings**.
 
 [![](img/slack_system_settings.png)](img/slack_system_settings.png)
 
-## SOAR Slack Asset
-
-Fill out the required values in the **Asset Definition** tab.
-
-[![](img/slack_asset_info.png)](img/slack_asset_info.png)
-
-Fill out the **Bot User OAuth Access Token** and **Socket Token** in the **Asset Settings** tab.
-
-[![](img/slack_asset_settings.png)](img/slack_asset_settings.png)
-
-**NOTE:** Before you are able to save, you will also need to fill in the Automation User Auth Token.
-See the following section if you do not already have that token available.
-
-Click **SAVE**. You will be asked to fill in the **Ingest Settings**. The "Label to apply
-to objects from this source" setting is ignored by this app, so it can be set to anything.
-
-Click **SAVE**.
-
-[![](img/slack_ingest_settings.png)](img/slack_ingest_settings.png)
-
-
-### Automation User
+### Automation User Token
 
 The Slack Bot connector needs a SOAR authentication token to perform some tasks on the SOAR platform.
 To get this token, it is recommended that you create a new automation user. The steps for creating
@@ -118,8 +114,26 @@ this user are as follows:
 
     [![](img/slack_auth_token.png)](img/slack_auth_token.png)
 
--   Paste the copied token in the **Automation User Auth Token** on the Slack Bot connector's **Asset
-    Settings** page
+-   The token is required during asset configuration for the **Automation User Auth Token** field.
+
+### SOAR Slack Asset
+
+Fill out the required values in the **Asset Definition** tab.
+
+[![](img/slack_asset_info.png)](img/slack_asset_info.png)
+
+Fill out the **Bot User OAuth Access Token**, **Socket Token**, and **Automation User Auth Token**
+in the **Asset Settings** tab. See the prior sections for information on how to obtain each of these 
+tokens.
+
+[![](img/slack_asset_settings.png)](img/slack_asset_settings.png)
+
+Click **SAVE**. You will be asked to fill in the **Ingest Settings**. The "Label to apply
+to objects from this source" setting is ignored by this app, so it can be set to anything.
+
+Click **SAVE**.
+
+[![](img/slack_ingest_settings.png)](img/slack_ingest_settings.png)
 
 ### Test Connectivity
 
@@ -128,20 +142,6 @@ text box with progress messages. It will show the bot username and bot user ID t
 from Slack. Please ensure that these are correct.
 
 [![](img/slack_new_test_connectivity.png)](img/slack_new_test_connectivity.png)
-
-## Set up Socket Mode in Slack
-
-Go to the **Your apps** option in Slack. From the menu on the left select the **Socket Mode**
-option.
-
-[![](img/slack_socket_mode.png)](img/slack_socket_mode.png)
-
-Once on this page, toggle on **Socket Mode**.
-
-Then, click on the **Event Subscriptions** option which will redirect you to the
-**Event Subscriptions** page. From there add the following subscriptions for bot:
-
-[![](img/slack_subscription_events.png)](img/slack_subscription_events.png)
 
 ## Bot Management on SOAR
 
