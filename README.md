@@ -2,7 +2,7 @@
 # Slack Bot
 
 Publisher: Splunk  
-Connector Version: 1.0.2  
+Connector Version: 1.0.3  
 Product Vendor: Slack Technologies  
 Product Name: Slack Bot  
 Product Version Supported (regex): ".\*"  
