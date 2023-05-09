@@ -6,7 +6,7 @@ Connector Version: 1.0.3
 Product Vendor: Slack Technologies  
 Product Name: Slack Bot  
 Product Version Supported (regex): ".\*"  
-Minimum Product Version: 5.3.5  
+Minimum Product Version: 5.5.0  
 
 Integrate with Slack using a custom Slack App
 
