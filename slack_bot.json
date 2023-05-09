@@ -335,14 +335,6 @@
     "pip39_dependencies": {
         "wheel": [
             {
-                "module": "Django",
-                "input_file": "wheels/py3/Django-3.2.18-py3-none-any.whl"
-            },
-            {
-                "module": "asgiref",
-                "input_file": "wheels/py3/asgiref-3.6.0-py3-none-any.whl"
-            },
-            {
                 "module": "certifi",
                 "input_file": "wheels/py3/certifi-2023.5.7-py3-none-any.whl"
             },
@@ -353,10 +345,6 @@
             {
                 "module": "idna",
                 "input_file": "wheels/py3/idna-3.4-py3-none-any.whl"
-            },
-            {
-                "module": "pytz",
-                "input_file": "wheels/shared/pytz-2023.3-py2.py3-none-any.whl"
             },
             {
                 "module": "requests",
@@ -377,10 +365,6 @@
             {
                 "module": "slack_sdk",
                 "input_file": "wheels/shared/slack_sdk-3.21.3-py2.py3-none-any.whl"
-            },
-            {
-                "module": "sqlparse",
-                "input_file": "wheels/py3/sqlparse-0.4.4-py3-none-any.whl"
             },
             {
                 "module": "urllib3",
