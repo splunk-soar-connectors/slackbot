@@ -14,6 +14,7 @@
 # and limitations under the License.
 import argparse
 import logging
+import logging.handlers
 import os
 import shlex
 import sys
@@ -588,11 +589,22 @@ def main():  # noqa
     sb._from_on_poll()
 
 
+def set_up_logging():
+    """ Set up logging for the bot. """
+    log_file = Path(tempfile.gettempdir()) / 'slack_bot.log'
+    max_bytes = 5 * 1024 * 1024  # 5MB
+    log_formatter = logging.Formatter('[%(process)d][%(asctime)s][%(levelname)s] %(message)s')
+
+    log_handler = logging.handlers.RotatingFileHandler(log_file, maxBytes=max_bytes, backupCount=4)
+    log_handler.setFormatter(log_formatter)
+
+    logger = logging.getLogger()
+    logger.addHandler(log_handler)
+    return logger
+
+
 if __name__ == '__main__':
-    log_file_path = Path(tempfile.gettempdir()) / 'slack_bot.log'
-    logging.basicConfig(filename=log_file_path,
-                        filemode='a',
-                        format='[%(process)d][%(asctime)s][%(levelname)s] %(message)s')
+    set_up_logging()
 
     try:
         main()
