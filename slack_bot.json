@@ -15,7 +15,7 @@
     "type": "information",
     "license": "Copyright (c) 2023 Splunk Inc.",
     "main_module": "slack_bot_connector.py",
-    "app_version": "1.0.3",
+    "app_version": "1.0.4",
     "utctime_updated": "2023-04-24T20:37:43.000000Z",
     "product_vendor": "Slack Technologies",
     "product_name": "Slack Bot",
