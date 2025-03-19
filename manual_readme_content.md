@@ -5,6 +5,7 @@ All external communication uses port 443.
 ## Authentication
 
 SOAR's Slack Bot Connector requires multiple authentication tokens in its configuration:
+
 - Bot Token - used to read messages from and post messages to Slack channels
 - Socket Token - used to establish a websocket connection with Slack in order to listen for events
 - SOAR Auth Token - used by the bot to authenticate requests to SOAR endpoints
@@ -94,27 +95,31 @@ The Slack Bot connector needs a SOAR authentication token to perform some tasks 
 To get this token, it is recommended that you create a new automation user. The steps for creating
 this user are as follows:
 
--   On the SOAR platform, navigate to **Administration->User Management**
--   Under **Users** , click **+ USER**
--   In the **Add User** wizard, do the following:
-    -   Set the **User Type** to **Automation**
-    -   Give the user a **Username** like "Slack Automation"
-    -   For security reasons, accessing 127.0.0.1 is not allowed. Set **Allowed IPs** same as the
-        **instance IP or "any"**. (eg : If instance IP is 10.1.18.123, set allowed IP also
-        10.1.18.123)
-    -   Set the **Default Label** to the label seen in the Slack Bot asset's **Ingest Settings**
-    -   Under **Roles** , in addition to the default **Automation** role, add the **Observer** role
-    -   Click **CREATE**
+- On the SOAR platform, navigate to **Administration->User Management**
 
-    [![](img/slack_automation_user.png)](img/slack_automation_user.png)
+- Under **Users** , click **+ USER**
 
--   Once the new user is created, click on the user in the user list
--   On the user's page copy the **ph-auth-token** field from the **Authorization Configuration for
-    REST API** box
+- In the **Add User** wizard, do the following:
 
-    [![](img/slack_auth_token.png)](img/slack_auth_token.png)
+  - Set the **User Type** to **Automation**
+  - Give the user a **Username** like "Slack Automation"
+  - For security reasons, accessing 127.0.0.1 is not allowed. Set **Allowed IPs** same as the
+    **instance IP or "any"**. (eg : If instance IP is 10.1.18.123, set allowed IP also
+    10.1.18.123)
+  - Set the **Default Label** to the label seen in the Slack Bot asset's **Ingest Settings**
+  - Under **Roles** , in addition to the default **Automation** role, add the **Observer** role
+  - Click **CREATE**
 
--   The token is required during asset configuration for the **Automation User Auth Token** field.
+  [![](img/slack_automation_user.png)](img/slack_automation_user.png)
+
+- Once the new user is created, click on the user in the user list
+
+- On the user's page copy the **ph-auth-token** field from the **Authorization Configuration for
+  REST API** box
+
+  [![](img/slack_auth_token.png)](img/slack_auth_token.png)
+
+- The token is required during asset configuration for the **Automation User Auth Token** field.
 
 ### SOAR Slack Asset
 
@@ -123,7 +128,7 @@ Fill out the required values in the **Asset Definition** tab.
 [![](img/slack_asset_info.png)](img/slack_asset_info.png)
 
 Fill out the **Bot User OAuth Access Token**, **Socket Token**, and **Automation User Auth Token**
-in the **Asset Settings** tab. See the prior sections for information on how to obtain each of these 
+in the **Asset Settings** tab. See the prior sections for information on how to obtain each of these
 tokens.
 
 [![](img/slack_asset_settings.png)](img/slack_asset_settings.png)
@@ -146,9 +151,11 @@ from Slack. Please ensure that these are correct.
 ## Bot Management on SOAR
 
 ### Starting the Slack Bot
+
 There are two options to start the Slack Bot:
 
 #### Action
+
 There is a "start bot" action which takes no parameters and starts the bot if it is not
 already running.
 
@@ -169,7 +176,6 @@ artifacts" settings can be ignored in this case.
 The POLL NOW window will display the PID of the Slackbot process as well as the number of artifacts
 and containers ingested (which will always be zero for this app).
 
-
 ### Stopping the Slack Bot
 
 Once the SOAR Slack Bot starts running, the **stop bot** action needs to be run to stop it. Simply
@@ -179,7 +185,6 @@ disabling ingestion won't stop Slackbot.
 connector. Otherwise, an untracked Slack Bot process may be left running on the SOAR instance.
 In addition, deleting a Slack Bot asset that has Slack Bot running will not stop a running Slack Bot
 process. It will silently continue in the background, untracked, unless explicitly stopped.
-
 
 ## Slack Commands
 
@@ -195,6 +200,7 @@ The following is a reproduction of the same help commands the bot will respond w
 Either by specifying an invalid command/parameter or by specifying the `-h`/`--help` flag.
 
 ### General Help
+
 ```
 usage: @<bot_username> [-h]
                        {debug,get_action,get_container,get_playbook,run_action,run_playbook}
@@ -208,6 +214,7 @@ commands:
 ```
 
 ### Debug
+
 ```
 usage: @<bot_username> debug [-h]
 
@@ -218,6 +225,7 @@ optional arguments:
 ```
 
 ### Get Action
+
 ```
 usage: @<bot_username> get_action [-h] [--name NAME] [--app APP]
                                   [--type ACTION_TYPE] [--sort-by {name,type}]
@@ -245,6 +253,7 @@ optional arguments:
 ```
 
 ### Get Container
+
 ```
 usage: @<bot_username> get_container [-h] [--id CONTAINER_ID] [--name NAME]
                                      [--tags [TAGS ...]]
@@ -283,6 +292,7 @@ optional arguments:
 ```
 
 ### Get Playbook
+
 ```
 usage: @<bot_username> get_playbook [-h] [--name NAME]
                                     [--status {active,inactive,draft}]
@@ -312,6 +322,7 @@ optional arguments:
 ```
 
 ### Run Action
+
 ```
 usage: @<bot_username> run_action [-h] [-a APP_ID | -p APP_NAME]
                                   [-n ASSET_NAME | -i ASSET_ID] [--name NAME]
@@ -352,6 +363,7 @@ After receiving a **run_action** command, the Slack Bot will kick off the action
 to the action run page to Slack.
 
 ### Run Playbook
+
 ```
 usage: @<bot_username> run_playbook [-h] (-n NAME | -i PLAYBOOK_ID) [-r REPO]
                                     container
@@ -374,6 +386,7 @@ After receiving a **run_playbook** command, the Slack Bot will start the playboo
 link to the container in which the playbook is running to Slack.
 
 ### Troubleshooting
+
 The logs for the "start bot", "stop bot", and "on poll" actions are in the same place as any other SOAR action or ingestion.
 
 The logs for the bot, however, are logged separately since the bot is its own process. These logs can be found

@@ -1,6 +1,6 @@
 # File: sb_debug.py
 #
-# Copyright (c) 2023 Splunk Inc.
+# Copyright (c) 2023-2025 Splunk Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,24 +19,24 @@ from commands.sb_command import Command
 
 
 class DebugCommand(Command):
-    """ Debug Command. """
+    """Debug Command."""
 
-    COMMAND_NAME = 'debug'
-    COMMAND_DESCRIPTION = 'Print debug info pertaining to the bot running on SOAR'
+    COMMAND_NAME = "debug"
+    COMMAND_DESCRIPTION = "Print debug info pertaining to the bot running on SOAR"
 
     def configure_parser(self, parser) -> None:
-        """ Configure the parser for this command. """
+        """Configure the parser for this command."""
 
     def check_authorization(self) -> bool:
-        """ Return True if authorized to run command. """
+        """Return True if authorized to run command."""
         # No gating permission for this command.
         return True
 
     def execute(self, parsed_args) -> str:  # pylint: disable=unused-argument
-        """ Execute the command with the specified arguments and return a message of the result. """
+        """Execute the command with the specified arguments and return a message of the result."""
         debug_info = []
-        debug_info.append('Slack Bot Debug Info')
-        debug_info.append(f'Host: {self.slack_bot.base_url}')
-        debug_info.append(f'PID: {os.getpid()}')
-        debug_info.append(f'SOAR App Version: {self.slack_bot.app_version}')
-        return '\n'.join(debug_info)
+        debug_info.append("Slack Bot Debug Info")
+        debug_info.append(f"Host: {self.slack_bot.base_url}")
+        debug_info.append(f"PID: {os.getpid()}")
+        debug_info.append(f"SOAR App Version: {self.slack_bot.app_version}")
+        return "\n".join(debug_info)
