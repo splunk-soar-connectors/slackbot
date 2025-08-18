@@ -21,7 +21,7 @@
     "product_name": "Slack Bot",
     "product_version_regex": ".*",
     "min_phantom_version": "5.5.0",
-    "python_version": "3",
+    "python_version": "3.9, 3.13",
     "fips_compliant": true,
     "latest_tested_versions": [
         "Cloud API, January 6, 2023"
@@ -263,20 +263,12 @@
     "pip39_dependencies": {
         "wheel": [
             {
-                "module": "sh",
-                "input_file": "wheels/shared/sh-1.14.3-py2.py3-none-any.whl"
-            },
-            {
-                "module": "simplejson",
-                "input_file": "wheels/py39/simplejson-3.18.1-cp39-cp39-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl"
-            },
-            {
                 "module": "slack_bolt",
-                "input_file": "wheels/shared/slack_bolt-1.16.1-py2.py3-none-any.whl"
+                "input_file": "wheels/shared/slack_bolt-1.23.0-py2.py3-none-any.whl"
             },
             {
                 "module": "slack_sdk",
-                "input_file": "wheels/shared/slack_sdk-3.21.3-py2.py3-none-any.whl"
+                "input_file": "wheels/shared/slack_sdk-3.36.0-py2.py3-none-any.whl"
             }
         ]
     },
@@ -297,6 +289,18 @@
             {
                 "module": "slack_sdk",
                 "input_file": "wheels/shared/slack_sdk-3.21.3-py2.py3-none-any.whl"
+            }
+        ]
+    },
+    "pip313_dependencies": {
+        "wheel": [
+            {
+                "module": "slack_bolt",
+                "input_file": "wheels/shared/slack_bolt-1.23.0-py2.py3-none-any.whl"
+            },
+            {
+                "module": "slack_sdk",
+                "input_file": "wheels/shared/slack_sdk-3.36.0-py2.py3-none-any.whl"
             }
         ]
     }
