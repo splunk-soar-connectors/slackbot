@@ -1,9 +1,9 @@
 # Slack Bot
 
-Publisher: Splunk \
-Connector Version: 1.0.4 \
-Product Vendor: Slack Technologies \
-Product Name: Slack Bot \
+Publisher: Splunk <br>
+Connector Version: 1.0.4 <br>
+Product Vendor: Slack Technologies <br>
+Product Name: Slack Bot <br>
 Minimum Product Version: 5.5.0
 
 Integrate with Slack using a custom Slack App
@@ -421,16 +421,16 @@ VARIABLE | REQUIRED | TYPE | DESCRIPTION
 
 ### Supported Actions
 
-[test connectivity](#action-test-connectivity) - Tests authorization with Slack \
-[on poll](#action-on-poll) - Start Slack Bot and make health checks to it \
-[start bot](#action-start-bot) - Start Slack Bot \
+[test connectivity](#action-test-connectivity) - Tests authorization with Slack <br>
+[on poll](#action-on-poll) - Start Slack Bot and make health checks to it <br>
+[start bot](#action-start-bot) - Start Slack Bot <br>
 [stop bot](#action-stop-bot) - Stop Slack Bot
 
 ## action: 'test connectivity'
 
 Tests authorization with Slack
 
-Type: **test** \
+Type: **test** <br>
 Read only: **True**
 
 Checks that the provided bot token is valid and grabs information about the configured bot user.
@@ -447,7 +447,7 @@ No Output
 
 Start Slack Bot and make health checks to it
 
-Type: **ingest** \
+Type: **ingest** <br>
 Read only: **True**
 
 Enabling ingestion causes the on poll action to be called every polling interval (configured in ingestion settings). The on poll action will check if Slack Bot is running; if it is not, the action will start it. No new containers or artifacts will be created by this action.
@@ -470,7 +470,7 @@ No Output
 
 Start Slack Bot
 
-Type: **correct** \
+Type: **correct** <br>
 Read only: **False**
 
 This action will start Slack Bot if it is not already running.
@@ -494,7 +494,7 @@ summary.total_objects_successful | numeric | | 1 |
 
 Stop Slack Bot
 
-Type: **correct** \
+Type: **correct** <br>
 Read only: **False**
 
 This action will stop Slack Bot if it is running.
