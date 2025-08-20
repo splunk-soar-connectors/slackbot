@@ -100,7 +100,7 @@ def _load_app_state(asset_id):
     except Exception:
         logging.exception("In _load_app_state: Exception encountered.")
 
-    logging.info("Loaded state: ", state)
+    logging.info("Loaded state: %s", state)
 
     return state
 
@@ -477,7 +477,11 @@ def main():
         sb._from_on_poll()
         sys.exit(0)
 
-    import bot_config
+    try:
+        import bot_config
+    except ImportError:
+        logging.error("Could not import bot_config.py file")
+        sys.exit(1)
 
     fail = False
 
