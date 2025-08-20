@@ -127,8 +127,9 @@ def _is_safe_path(basedir, path, follow_symlinks=True):
 
 def rest_log(message):
     state_dir = f"{APPS_STATE_PATH}/{SLACK_BOT_APP_ID}"
-    path.unlink()
     path = Path(state_dir) / "resthandler.log"
+    if path.exists():
+        path.unlink()
     path.touch()  # default exists_ok=True
     with path.open("a") as highscore:
         highscore.write(message + "\n")
@@ -674,7 +675,7 @@ class SlackBotConnector(phantom.BaseConnector):
                 return action_result.set_status(phantom.APP_ERROR, SLACK_BOT_ERROR_SLACK_BOT_NOT_RUNNING)
         else:
             try:
-                ps_out = sh.grep(sh.ps("ww", "aux"), SLACK_BOT_PROCESS_NAME)
+                ps_out = sh.grep(sh.ps("ww", "aux"), SLACK_BOT_PROCESS_NAME)  # pylint: disable=E1101
                 pid = shlex.split(str(ps_out))[1]
                 try:
                     sh.kill(pid)  # pylint: disable=E1101
@@ -701,10 +702,10 @@ class SlackBotConnector(phantom.BaseConnector):
                 if self.is_poll_now():
                     self.save_progress(f"Container Count: {container_count}")
                     if container_count == 1234:
-                        sh.kill(pid)
+                        sh.kill(pid)  # pylint: disable=E1101
                         self.save_progress(f"Container count set to 1234, stopping {SLACK_BOT_PROCESS_NAME} at pid {pid}")
                     elif container_count == int(pid):
-                        sh.kill(pid)
+                        sh.kill(pid)  # pylint: disable=E1101
                         self.save_progress("pid passed in as container count, stopping bot")
                         return action_result.set_status(phantom.APP_SUCCESS, "bot has been stopped")
                     else:
