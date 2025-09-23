@@ -4,7 +4,7 @@ Publisher: Splunk <br>
 Connector Version: 1.0.4 <br>
 Product Vendor: Slack Technologies <br>
 Product Name: Slack Bot <br>
-Minimum Product Version: 5.5.0
+Minimum Product Version: 6.3.0
 
 Integrate with Slack using a custom Slack App
 
