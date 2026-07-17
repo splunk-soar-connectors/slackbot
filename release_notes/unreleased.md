@@ -1,3 +1,3 @@
 **Unreleased**
 
-* - chore: Refresh development tooling.
+* - Fixed SOAR REST query construction to encode filter values safely.
