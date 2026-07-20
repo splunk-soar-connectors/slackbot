@@ -1,7 +1,7 @@
 # Slack Bot
 
 Publisher: Splunk <br>
-Connector Version: 1.0.5 <br>
+Connector Version: 1.0.6 <br>
 Product Vendor: Slack Technologies <br>
 Product Name: Slack Bot <br>
 Minimum Product Version: 6.3.0
