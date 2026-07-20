@@ -1,6 +1,6 @@
 # File: slack_bot_standalone.py
 #
-# Copyright (c) 2023-2025 Splunk Inc.
+# Copyright (c) 2023-2026 Splunk Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -39,6 +39,7 @@ from commands.sb_run_action import RunActionCommand
 from commands.sb_run_playbook import RunPlaybookCommand
 from slack_bot_consts import *
 from slack_bot_enums import CommandPermission, SoarRestEndpoint
+from utils.sb_query import create_query_string
 from utils.sb_result import FailureResult, Result, SuccessResult
 
 
@@ -56,14 +57,6 @@ AVAILABLE_COMMANDS = sorted(
     ],
     key=lambda command: command.COMMAND_NAME,
 )
-
-
-def create_query_string(query_parameters):
-    """Create a query URL string from a query parameters dictionary."""
-    if not query_parameters:
-        return ""
-
-    return "?" + "&".join(f"{key}={value}" for key, value in query_parameters.items())
 
 
 def dedupe(list_to_dedupe):

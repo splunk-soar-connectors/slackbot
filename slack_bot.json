@@ -13,7 +13,7 @@
     ],
     "package_name": "phantom_slack_bot",
     "type": "information",
-    "license": "Copyright (c) 2023-2025 Splunk Inc.",
+    "license": "Copyright (c) 2023-2026 Splunk Inc.",
     "main_module": "slack_bot_connector.py",
     "app_version": "1.0.5",
     "utctime_updated": "2025-09-24T19:05:11.579375Z",
@@ -268,7 +268,7 @@
             },
             {
                 "module": "slack_sdk",
-                "input_file": "wheels/shared/slack_sdk-3.36.0-py2.py3-none-any.whl"
+                "input_file": "wheels/shared/slack_sdk-3.43.0-py2.py3-none-any.whl"
             }
         ]
     },
@@ -280,7 +280,7 @@
             },
             {
                 "module": "slack_sdk",
-                "input_file": "wheels/shared/slack_sdk-3.36.0-py2.py3-none-any.whl"
+                "input_file": "wheels/shared/slack_sdk-3.43.0-py2.py3-none-any.whl"
             }
         ]
     }
