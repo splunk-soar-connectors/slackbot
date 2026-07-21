@@ -280,6 +280,7 @@ class SlackBotConnector(phantom.BaseConnector):
         self._command_permissions = {permission: config.get(permission.value, False) for permission in CommandPermission}
         self._permitted_users = config.get(SLACK_BOT_JSON_PERMITTED_USERS, False)
         self._log_level = config.get(SLACK_BOT_JSON_LOG_LEVEL)
+        self._verify_server_cert = config.get(SLACK_BOT_JSON_VERIFY_SERVER_CERT, True)
         self._base_url = SLACK_BASE_URL
 
         ret_val, ph_base_url = self._get_phantom_base_url_slack(self)
@@ -296,6 +297,7 @@ class SlackBotConnector(phantom.BaseConnector):
             self._state[permission.value] = is_granted
         self._state[SLACK_BOT_JSON_PERMITTED_USERS] = self._permitted_users
         self._state[SLACK_BOT_JSON_LOG_LEVEL] = self._log_level
+        self._state[SLACK_BOT_JSON_VERIFY_SERVER_CERT] = self._verify_server_cert
 
         return phantom.APP_SUCCESS
 

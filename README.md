@@ -413,6 +413,7 @@ VARIABLE | REQUIRED | TYPE | DESCRIPTION
 **soar_auth_token** | required | password | Automation User Auth Token |
 **permitted_bot_users** | optional | string | Users permitted to use bot commands. Comma seperated list of Member IDs. Leave blank to allow all users (default) |
 **log_level** | optional | string | The log level for the bot |
+**verify_server_cert** | optional | boolean | Verify the SOAR server certificate for bot REST API requests |
 **permit_bot_get_action** | optional | boolean | Permit 'get_action' command |
 **permit_bot_run_action** | optional | boolean | Permit 'run_action' command |
 **permit_bot_get_playbook** | optional | boolean | Permit 'get_playbook' command |
