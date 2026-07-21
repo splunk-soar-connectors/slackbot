@@ -114,7 +114,7 @@ class SlackBot:
         socket_token,
         bot_id,
         base_url="https://127.0.0.1/",
-        verify=False,
+        verify=True,
         auth_token="",
         command_permissions=None,
         permitted_users="",
@@ -219,11 +219,13 @@ class SlackBot:
             input_string.replace("\u2014", "--").replace("\u2018", "'").replace("\u2019", "'").replace("\u201c", '"').replace("\u201d", '"')
         )
 
-        while sanitized_string.find("<") > -1 and sanitized_string.find(">") > -1:
-            left_index = sanitized_string.find("<")
-            right_index = sanitized_string.find(">")
-            pipe_index = sanitized_string.find("|")
-            if left_index < pipe_index < right_index:
+        while (left_index := sanitized_string.find("<")) > -1:
+            right_index = sanitized_string.find(">", left_index + 1)
+            if right_index == -1:
+                break
+
+            pipe_index = sanitized_string.find("|", left_index + 1, right_index)
+            if pipe_index != -1:
                 url = sanitized_string[pipe_index + 1 : right_index]
             else:
                 url = sanitized_string[left_index + 1 : right_index]
@@ -434,6 +436,7 @@ def main():
         command_permissions = {permission: state.get(permission.value, False) for permission in CommandPermission}
         permitted_users = state.get(SLACK_BOT_JSON_PERMITTED_USERS)
         log_level = state.get(SLACK_BOT_JSON_LOG_LEVEL)
+        verify_server_cert = state.get(SLACK_BOT_JSON_VERIFY_SERVER_CERT, True)
         logging.getLogger().setLevel(log_level)
 
         try:
@@ -462,6 +465,7 @@ def main():
             socket_token=socket_token,
             bot_id=bot_id,
             base_url=ph_base_url,
+            verify=verify_server_cert,
             auth_token=soar_auth_token,
             command_permissions=command_permissions,
             permitted_users=permitted_users,
