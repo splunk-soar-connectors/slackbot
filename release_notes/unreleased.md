@@ -1,4 +1,1 @@
 **Unreleased**
-
-* Verify SOAR server certificates by default before sending the automation user's authentication token.
-* Prevent malformed Slack-formatted links from trapping the bot command sanitizer in an infinite loop.
