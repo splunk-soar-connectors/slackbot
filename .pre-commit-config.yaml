@@ -86,3 +86,10 @@ repos:
         language: python
         additional_dependencies: ["local-hooks"]
         args: ['.']
+  - repo: local
+    hooks:
+      - id: unit-tests
+        name: Run unit tests
+        entry: python3 -m unittest discover -s tests
+        language: system
+        pass_filenames: false

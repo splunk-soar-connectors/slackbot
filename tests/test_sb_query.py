@@ -12,30 +12,33 @@
 # the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
 # either express or implied. See the License for the specific language governing permissions
 # and limitations under the License.
+import unittest
 from urllib.parse import parse_qs
 
 from utils.sb_query import create_query_string
 
 
-def test_create_query_string_encodes_parameter_delimiters():
-    injected_value = '"app-id"&page_size=0&_filter_id__in=attacker'
+class CreateQueryStringTests(unittest.TestCase):
+    def test_encodes_parameter_delimiters(self):
+        injected_value = '"app-id"&page_size=0&_filter_id__in=attacker'
 
-    query_string = create_query_string({"_filter_name": injected_value})
+        query_string = create_query_string({"_filter_name": injected_value})
 
-    assert "%26" in query_string
-    assert "%3D" in query_string
-    assert parse_qs(query_string.removeprefix("?")) == {"_filter_name": [injected_value]}
+        self.assertIn("%26", query_string)
+        self.assertIn("%3D", query_string)
+        self.assertEqual(parse_qs(query_string.removeprefix("?")), {"_filter_name": [injected_value]})
 
+    def test_preserves_list_parameters(self):
+        query_string = create_query_string({"_filter_id__in": ["first", "second"], "page_size": 0})
 
-def test_create_query_string_preserves_list_parameters():
-    query_string = create_query_string({"_filter_id__in": ["first", "second"], "page_size": 0})
+        self.assertEqual(
+            parse_qs(query_string.removeprefix("?")),
+            {
+                "_filter_id__in": ["first", "second"],
+                "page_size": ["0"],
+            },
+        )
 
-    assert parse_qs(query_string.removeprefix("?")) == {
-        "_filter_id__in": ["first", "second"],
-        "page_size": ["0"],
-    }
-
-
-def test_create_query_string_handles_empty_parameters():
-    assert create_query_string({}) == ""
-    assert create_query_string(None) == ""
+    def test_handles_empty_parameters(self):
+        self.assertEqual(create_query_string({}), "")
+        self.assertEqual(create_query_string(None), "")
